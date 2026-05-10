@@ -1,0 +1,64 @@
+{% extends "bookings/base.html" %}
+{% block title %}My Bookings — Rowing Club{% endblock %}
+{% block nav_mine %}class="active"{% endblock %}
+
+{% block content %}
+<h1>My Bookings</h1>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="margin-bottom:1rem;color:var(--sea-bright)">Upcoming</h2>
+  {% if upcoming %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Boat</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for booking in upcoming %}
+      <tr>
+        <td><strong>{{ booking.date|date:"D, d M Y" }}</strong></td>
+        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
+        <td>{{ booking.boat.name }}</td>
+        <td>
+          <form method="post" action="/cancel/{{ booking.id }}/" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?')">Cancel</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted)">No upcoming bookings. <a href="/calendar/" style="color:var(--sea-bright)">Book a slot →</a></p>
+  {% endif %}
+</div>
+
+{% if past %}
+<div class="card">
+  <h2 style="margin-bottom:1rem;color:var(--text-muted)">Past (last 10)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Boat</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for booking in past %}
+      <tr style="opacity:0.6">
+        <td>{{ booking.date|date:"D, d M Y" }}</td>
+        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
+        <td>{{ booking.boat.name }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

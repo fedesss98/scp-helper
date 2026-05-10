@@ -1,0 +1,72 @@
+{% extends "bookings/base.html" %}
+{% block title %}Login — Rowing Club{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-wrap { width: 100%; max-width: 380px; padding: 1rem; }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .login-logo h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 0.25rem;
+  }
+  .login-logo p { color: var(--text-muted); font-size: 0.9rem; }
+  .login-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+  }
+  .btn-login {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    background: var(--sea-bright);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .btn-login:hover { filter: brightness(1.15); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrap">
+  <div class="login-logo">
+    <h1>🚣 RowingClub</h1>
+    <p>Boat Booking System</p>
+  </div>
+  <div class="login-card">
+    {% if form.non_field_errors %}
+    <div class="form-errors">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% elif form.errors %}
+    <div class="form-errors">Incorrect username or password. Please try again.</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_username">Username</label>
+        <input type="text" name="username" id="id_username" autofocus autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="id_password">Password</label>
+        <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn-login">Log In →</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

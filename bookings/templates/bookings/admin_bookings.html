@@ -1,0 +1,46 @@
+{% extends "bookings/base.html" %}
+{% block title %}All Bookings — Rowing Club{% endblock %}
+{% block nav_allbk %}class="active"{% endblock %}
+
+{% block content %}
+<h1>All Upcoming Bookings</h1>
+
+<div class="card">
+  {% if bookings %}
+  <table>
+    <thead>
+      <tr>
+        <th>Athlete</th>
+        <th>Boat</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Booked At</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for booking in bookings %}
+      <tr>
+        <td><strong>{{ booking.athlete.username }}</strong></td>
+        <td>{{ booking.boat.name }}</td>
+        <td>{{ booking.date|date:"D, d M Y" }}</td>
+        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
+        <td style="color:var(--text-muted);font-size:0.85rem">{{ booking.created_at|date:"d M H:i" }}</td>
+        <td>
+          <form method="post" action="/cancel/{{ booking.id }}/" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm"
+              onclick="return confirm('Remove booking for {{ booking.athlete.username }}?')">
+              Remove
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted)">No upcoming bookings.</p>
+  {% endif %}
+</div>
+{% endblock %}

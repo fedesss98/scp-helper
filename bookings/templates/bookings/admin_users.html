@@ -1,0 +1,56 @@
+{% extends "bookings/base.html" %}
+{% block title %}Athletes — Rowing Club{% endblock %}
+{% block nav_admin %}class="active"{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <h1 style="margin:0">Athletes</h1>
+  <a href="/admin/users/create/" class="btn btn-gold">+ Add Athlete</a>
+</div>
+
+<div class="card">
+  {% if athletes %}
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Bookings</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for athlete in athletes %}
+      <tr>
+        <td><strong>{{ athlete.username }}</strong></td>
+        <td>{{ athlete.get_full_name|default:"—" }}</td>
+        <td>{{ athlete.email|default:"—" }}</td>
+        <td>
+          {% if athlete.is_staff %}
+          <span class="badge badge-admin">Admin</span>
+          {% else %}
+          <span style="color:var(--text-muted);font-size:0.85rem">Athlete</span>
+          {% endif %}
+        </td>
+        <td style="color:var(--text-muted)">{{ athlete.bookings.count }}</td>
+        <td>
+          <a href="/admin/users/{{ athlete.id }}/password/" class="btn btn-ghost btn-sm">Change Password</a>
+          <form method="post" action="/admin/users/{{ athlete.id }}/delete/" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm"
+              onclick="return confirm('Delete {{ athlete.username }}? This also deletes all their bookings.')">
+              Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted)">No athletes yet. <a href="/admin/users/create/" style="color:var(--sea-bright)">Create the first one →</a></p>
+  {% endif %}
+</div>
+{% endblock %}
