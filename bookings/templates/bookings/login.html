@@ -10,17 +10,18 @@
     margin-bottom: 2rem;
   }
   .login-logo h1 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 2.5rem;
-    color: var(--gold);
+    font-size: 2rem;
+    color: var(--sea-bright);
     margin-bottom: 0.25rem;
+    letter-spacing: 0;
   }
   .login-logo p { color: var(--text-muted); font-size: 0.9rem; }
   .login-card {
     background: var(--navy-mid);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: var(--radius);
     padding: 2rem;
+    box-shadow: var(--shadow-md);
   }
   .btn-login {
     width: 100%;
@@ -31,19 +32,20 @@
     color: #fff;
     border: none;
     border-radius: var(--radius);
-    font-family: 'Barlow', sans-serif;
-    font-weight: 600;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
     cursor: pointer;
-    transition: filter 0.15s;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
   }
-  .btn-login:hover { filter: brightness(1.15); }
+  .btn-login:hover { background: #1d4ed8; box-shadow: var(--shadow-md); }
+  .btn-login:active { transform: scale(0.98); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="login-wrap">
   <div class="login-logo">
-    <h1>🚣 RowingClub</h1>
+    <h1>VogApp</h1>
     <p>Boat Booking System</p>
   </div>
   <div class="login-card">

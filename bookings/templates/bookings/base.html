@@ -1,357 +1,467 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Rowing Club{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy: #0d1b2a;
-      --navy-mid: #1a2e45;
-      --navy-light: #243d5c;
-      --sea: #1b6ca8;
-      --sea-bright: #2196f3;
-      --foam: #e8f4fd;
-      --gold: #f0a500;
-      --danger: #e53935;
-      --success: #2e7d32;
-      --text: #f0f4f8;
-      --text-muted: #8faabf;
-      --border: rgba(255,255,255,0.08);
-      --radius: 8px;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}VogApp{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #f8fafc;
+        --navy-mid: #ffffff;
+        --navy-light: #e0f2fe;
+        --sea: #0891b2;
+        --sea-bright: #2563eb;
+        --foam: #f0f9ff;
+        --gold: #d97706;
+        --danger: #dc2626;
+        --success: #16a34a;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --surface-soft: #f1f5f9;
+        --surface-tint: #eef6ff;
+        --radius: 10px;
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+        --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      font-family: 'Barlow', sans-serif;
-      background: var(--navy);
-      color: var(--text);
-      min-height: 100vh;
-    }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--navy);
+        color: var(--text);
+        min-height: 100vh;
+        letter-spacing: 0;
+      }
 
-    /* ── Nav ── */
-    .site-nav {
-      background: var(--navy-mid);
-      border-bottom: 1px solid var(--border);
-      padding: 0 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .nav-brand {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      color: var(--gold);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .nav-brand span { color: var(--text); }
-
-    .nav-toggle {
-      display: none;
-      width: 38px;
-      height: 38px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: transparent;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .nav-toggle span {
-      width: 18px;
-      height: 2px;
-      border-radius: 2px;
-      background: var(--text);
-      display: block;
-    }
-
-    .nav-menu {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 0.4rem 0.75rem;
-      border-radius: var(--radius);
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-links a:hover { color: var(--text); background: var(--border); }
-    .nav-links a.active { color: var(--text); background: var(--navy-light); }
-
-    .nav-user {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .nav-user strong { color: var(--text); }
-
-    @media (max-width: 760px) {
+      /* ── Nav ── */
       .site-nav {
-        min-height: 56px;
-        height: auto;
-        padding: 0.55rem 1rem;
-        flex-wrap: wrap;
+        background: var(--navy-mid);
+        border-bottom: 1px solid var(--border);
+        padding: 0 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .nav-brand {
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: var(--sea-bright);
+        text-decoration: none;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-brand span {
+        color: var(--text);
       }
 
       .nav-toggle {
-        display: inline-flex;
+        display: none;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--navy);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .nav-toggle span {
+        width: 18px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--text-muted);
+        display: block;
       }
 
       .nav-menu {
-        display: none;
-        flex-basis: 100%;
-        width: 100%;
-        padding-top: 0.75rem;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-      }
-
-      .site-nav.nav-open .nav-menu {
         display: flex;
+        align-items: center;
+        gap: 1rem;
       }
 
       .nav-links {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
       }
 
       .nav-links a {
-        padding: 0.65rem 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.5rem 0.8rem;
+        border-radius: var(--radius);
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition:
+          color 0.15s,
+          background 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+        background: var(--surface-soft);
+      }
+      .nav-links a.active {
+        color: #1d4ed8;
+        background: #dbeafe;
+        box-shadow: inset 0 0 0 1px #bfdbfe;
       }
 
       .nav-user {
-        justify-content: space-between;
-        border-top: 1px solid var(--border);
-        padding-top: 0.75rem;
-        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
       }
-    }
 
-    /* ── Layout ── */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
+      .nav-user strong {
+        color: var(--text);
+      }
 
-    h1, h2, h3 {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-    }
+      @media (max-width: 760px) {
+        .site-nav {
+          min-height: 56px;
+          height: auto;
+          padding: 0.55rem 1rem;
+          flex-wrap: wrap;
+        }
 
-    h1 { font-size: 2rem; margin-bottom: 1.5rem; }
-    h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+        .nav-toggle {
+          display: inline-flex;
+        }
 
-    /* ── Buttons ── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      padding: 0.45rem 1rem;
-      border-radius: var(--radius);
-      font-family: 'Barlow', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      transition: filter 0.15s, transform 0.1s;
-      white-space: nowrap;
-    }
+        .nav-menu {
+          display: none;
+          flex-basis: 100%;
+          width: 100%;
+          padding-top: 0.75rem;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+        }
 
-    .btn:hover { filter: brightness(1.15); }
-    .btn:active { transform: scale(0.97); }
+        .site-nav.nav-open .nav-menu {
+          display: flex;
+        }
 
-    .btn-primary { background: var(--sea-bright); color: #fff; }
-    .btn-gold { background: var(--gold); color: var(--navy); }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
-    .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
+        .nav-links {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.35rem;
+        }
 
-    /* ── Cards ── */
-    .card {
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
+        .nav-links a {
+          padding: 0.65rem 0.75rem;
+        }
 
-    /* ── Forms ── */
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+        .nav-user {
+          justify-content: space-between;
+          border-top: 1px solid var(--border);
+          padding-top: 0.75rem;
+          flex-wrap: wrap;
+        }
+      }
 
-    .form-group input[type="text"],
-    .form-group input[type="password"],
-    .form-group input[type="email"] {
-      width: 100%;
-      padding: 0.65rem 0.85rem;
-      background: var(--navy);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'Barlow', sans-serif;
-      font-size: 0.95rem;
-      transition: border-color 0.15s;
-    }
+      /* ── Layout ── */
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
 
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--sea-bright);
-    }
+      h1,
+      h2,
+      h3 {
+        font-weight: 800;
+        letter-spacing: 0;
+      }
 
-    .form-errors {
-      background: rgba(229,57,53,0.12);
-      border: 1px solid rgba(229,57,53,0.3);
-      border-radius: var(--radius);
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      font-size: 0.88rem;
-      color: #ef9a9a;
-    }
+      h1 {
+        font-size: 1.85rem;
+        margin-bottom: 1.5rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+      }
 
-    /* ── Messages ── */
-    .messages {
-      list-style: none;
-      margin-bottom: 1.5rem;
-    }
+      /* ── Buttons ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.55rem 0.9rem;
+        border-radius: var(--radius);
+        font-family: "Inter", system-ui, sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s,
+          transform 0.1s,
+          box-shadow 0.15s;
+        white-space: nowrap;
+        box-shadow: var(--shadow-sm);
+      }
 
-    .messages li {
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius);
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
+      .btn:hover {
+        box-shadow: var(--shadow-md);
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
 
-    .messages li.success { background: rgba(46,125,50,0.2); border: 1px solid rgba(46,125,50,0.4); color: #a5d6a7; }
-    .messages li.error { background: rgba(229,57,53,0.15); border: 1px solid rgba(229,57,53,0.35); color: #ef9a9a; }
-    .messages li.info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.35); color: #90caf9; }
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+        border-color: #2563eb;
+      }
+      .btn-primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+      }
+      .btn-gold {
+        background: #f59e0b;
+        color: #111827;
+        border-color: #f59e0b;
+      }
+      .btn-danger {
+        background: #fff;
+        color: var(--danger);
+        border-color: #fecaca;
+      }
+      .btn-danger:hover {
+        background: #fef2f2;
+        border-color: #fca5a5;
+      }
+      .btn-ghost {
+        background: #fff;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        color: var(--text);
+        border-color: #cbd5e1;
+        background: var(--surface-soft);
+      }
+      .btn-sm {
+        padding: 0.42rem 0.7rem;
+        font-size: 0.78rem;
+      }
 
-    /* ── Table ── */
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: left;
-      padding: 0.6rem 0.85rem;
-      border-bottom: 1px solid var(--border);
-    }
-    td {
-      padding: 0.75rem 0.85rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
+      /* ── Cards ── */
+      .card {
+        background: var(--navy-mid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+      }
 
-    /* ── Badge ── */
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.55rem;
-      border-radius: 99px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .badge-admin { background: rgba(240,165,0,0.2); color: var(--gold); }
-  </style>
-  {% block extra_css %}{% endblock %}
-</head>
-<body>
+      /* ── Forms ── */
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
 
-{% if user.is_authenticated %}
-<nav class="site-nav" data-nav>
-  <a href="/calendar/" class="nav-brand">🚣 <span>Rowing</span>Club</a>
-  <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" data-nav-toggle>
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-  <div class="nav-menu">
-    <div class="nav-links">
-      <a href="/calendar/" {% block nav_cal %}{% endblock %}>Calendar</a>
-      <a href="/my-bookings/" {% block nav_mine %}{% endblock %}>My Bookings</a>
-      {% if is_admin %}
-        <a href="/admin/users/" {% block nav_admin %}{% endblock %}>Athletes</a>
-        <a href="/admin/bookings/" {% block nav_allbk %}{% endblock %}>All Bookings</a>
-      {% endif %}
+      .form-group input[type="text"],
+      .form-group input[type="password"],
+      .form-group input[type="email"],
+      .form-group input[type="date"],
+      .form-group input[type="time"],
+      .form-group select {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: "Inter", system-ui, sans-serif;
+        font-size: 0.95rem;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: var(--sea-bright);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+      }
+
+      .form-errors {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: var(--radius);
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.88rem;
+        color: #b91c1c;
+      }
+
+      /* ── Messages ── */
+      .messages {
+        list-style: none;
+        margin-bottom: 1.5rem;
+      }
+
+      .messages li {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .messages li.success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+      }
+      .messages li.error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+      }
+      .messages li.info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+      }
+
+      /* ── Table ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        font-size: 0.85rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: left;
+        padding: 0.6rem 0.85rem;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 0.75rem 0.85rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--surface-soft);
+      }
+
+      /* ── Badge ── */
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-admin {
+        background: #fef3c7;
+        color: #92400e;
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    {% if user.is_authenticated %}
+    <nav class="site-nav" data-nav>
+      <a href="/calendar/" class="nav-brand">Vog<span>App</span></a>
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Menu"
+        aria-expanded="false"
+        data-nav-toggle
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-menu">
+        <div class="nav-links">
+          <a href="/calendar/" class="{% if request.path == '/' or request.path == '/calendar/' %}active{% endif %}">Calendar</a>
+          <a href="/my-bookings/" class="{% if request.path == '/my-bookings/' %}active{% endif %}">My Bookings</a>
+          {% if is_admin %}
+          <a href="/admin/users/" class="{% if '/admin/users/' in request.path %}active{% endif %}">Athletes</a>
+          <a href="/admin/bookings/" class="{% if request.path == '/admin/bookings/' %}active{% endif %}">All Bookings</a>
+          {% endif %}
+        </div>
+        <div class="nav-user">
+          <strong>{{ user.username }}</strong>
+          {% if is_admin %}
+          <span class="badge badge-admin">Admin</span>
+          {% endif %}
+          <a href="/logout/" class="btn btn-ghost btn-sm">Log out</a>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <div class="container">
+      {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% block content %}{% endblock %}
     </div>
-    <div class="nav-user">
-      <strong>{{ user.username }}</strong>
-      {% if is_admin %}<span class="badge badge-admin">Admin</span>{% endif %}
-      <a href="/logout/" class="btn btn-ghost btn-sm">Log out</a>
-    </div>
-  </div>
-</nav>
-{% endif %}
 
-<div class="container">
-  {% if messages %}
-  <ul class="messages">
-    {% for message in messages %}
-    <li class="{{ message.tags }}">{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
-  {% block content %}{% endblock %}
-</div>
-
-<script>
-  document.querySelectorAll('[data-nav-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const nav = button.closest('[data-nav]');
-      const isOpen = nav.classList.toggle('nav-open');
-      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-  });
-</script>
-
-</body>
+    <script>
+      document.querySelectorAll("[data-nav-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const nav = button.closest("[data-nav]");
+          const isOpen = nav.classList.toggle("nav-open");
+          button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+      });
+    </script>
+  </body>
 </html>

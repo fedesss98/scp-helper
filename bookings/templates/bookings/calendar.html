@@ -1,7 +1,6 @@
 {% extends "bookings/base.html" %}
 {% load booking_extras %}
 {% block title %}Calendar - Rowing Club{% endblock %}
-{% block nav_cal %}class="active"{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -26,12 +25,16 @@
   }
 
   .week-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
     min-width: 220px;
     text-align: center;
     color: var(--text);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.48rem 0.85rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .calendar-list {
@@ -42,12 +45,14 @@
   .day-panel {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: rgba(255,255,255,0.02);
+    background: #fff;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
   }
 
   .day-panel-today {
-    border-color: rgba(33,150,243,0.45);
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(147,197,253,0.28), var(--shadow-sm);
   }
 
   .day-heading {
@@ -56,7 +61,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.85rem 1rem;
-    background: var(--navy-mid);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border-bottom: 1px solid var(--border);
   }
 
@@ -68,10 +73,10 @@
   }
 
   .day-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 800;
     color: var(--text);
+    letter-spacing: 0;
   }
 
   .day-date {
@@ -81,13 +86,13 @@
 
   .today-badge {
     color: #fff;
-    background: var(--sea-bright);
+    background: #2563eb;
     border-radius: 999px;
     padding: 0.18rem 0.55rem;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0;
   }
 
   .slot-list {
@@ -105,7 +110,7 @@
   }
 
   .slot-time {
-    background: rgba(255,255,255,0.025);
+    background: #f8fafc;
     border-right: 1px solid var(--border);
     padding: 0.85rem 0.75rem;
     display: flex;
@@ -116,8 +121,8 @@
   }
 
   .slot-time strong {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.2rem;
+    font-size: 1rem;
+    font-weight: 800;
     color: var(--text);
   }
 
@@ -139,6 +144,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
+    background: #fff;
+  }
+
+  .boat-cell:hover {
+    background: #f8fafc;
   }
 
   .boat-cell:last-child {
@@ -154,7 +164,7 @@
     color: var(--text);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0;
   }
 
   .seat-count {
@@ -182,19 +192,23 @@
   }
 
   .taken-name {
-    color: rgba(255,255,255,0.58);
+    color: #475569;
     display: block;
     font-weight: 600;
   }
 
   .booked-label {
-    color: var(--gold);
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
     font-weight: 700;
     font-size: 0.82rem;
   }
 
   .slot-past {
-    opacity: 0.42;
+    opacity: 0.58;
     pointer-events: none;
   }
 
@@ -217,6 +231,11 @@
     gap: 0.4rem;
     font-size: 0.82rem;
     color: var(--text-muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .legend-dot {
@@ -403,15 +422,15 @@
 
 <div class="legend">
   <div class="legend-item">
-    <div class="legend-dot" style="background:rgba(33,150,243,0.2);border:1px dashed rgba(33,150,243,0.5)"></div>
+    <div class="legend-dot" style="background:#dbeafe;border:1px solid #93c5fd"></div>
     Available
   </div>
   <div class="legend-item">
-    <div class="legend-dot" style="background:rgba(240,165,0,0.2);border:1px solid var(--gold)"></div>
+    <div class="legend-dot" style="background:#fef3c7;border:1px solid #f59e0b"></div>
     Your booking
   </div>
   <div class="legend-item">
-    <div class="legend-dot" style="background:rgba(255,255,255,0.08)"></div>
+    <div class="legend-dot" style="background:#f1f5f9;border:1px solid #cbd5e1"></div>
     Full or past
   </div>
   {% for boat in boats %}
