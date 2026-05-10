@@ -115,7 +115,7 @@ def calendar_view(request):
     # Group as { (boat_id, date_str): [booking, ...] }
     booking_map = defaultdict(list)
     for b in bookings_qs:
-        booking_map[(b.boat_id, str(b.date))].append(b)
+        booking_map[(b.boat.id, str(b.date))].append(b)
 
     return render(request, 'bookings/calendar.html', {
         'boats': boats,

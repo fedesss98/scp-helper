@@ -16,6 +16,6 @@ def get_slot_bookings(booking_map, boat_id, day, slot_start, slot_end):
 @register.simple_tag
 def user_booking(bookings, user):
     for booking in bookings:
-        if booking.athlete_id == user.id:
+        if booking.athlete.id == user.id:
             return booking
     return None
