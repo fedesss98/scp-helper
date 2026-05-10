@@ -20,9 +20,6 @@ htmlcov/
 
 # Virtual environments
 .venv/
-venv/
-env/
-ENV/
 
 # Packaging and build outputs
 build/
