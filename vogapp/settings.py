@@ -2,15 +2,12 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()  # Load environment variables from .env file
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ['SECRET_KEY']
-
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 def env_bool(name, default=False):
     value = os.environ.get(name)
@@ -26,12 +23,11 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
+DEBUG = env_bool('DEBUG', False)
+
 ALLOWED_HOSTS = env_list('ALLOWED_HOSTS')
 if not ALLOWED_HOSTS:
-    if DEBUG:
-        ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
-    else:
-        raise ImproperlyConfigured('Set ALLOWED_HOSTS in production.')
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

@@ -3,7 +3,7 @@ from datetime import date, time
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from .forms import BookingForm
+from .forms import BookingForm, ChangePasswordForm, CreateAthleteForm
 from .models import Boat, Booking
 
 
@@ -87,3 +87,24 @@ class BookingCapacityTests(TestCase):
         )
 
         self.assertFalse(self.form_for(self.alice, '09:30', '10:30').is_valid())
+
+
+class AdminPasswordFormTests(TestCase):
+    def test_create_athlete_rejects_short_passwords(self):
+        form = CreateAthleteForm(data={
+            'username': 'shortpass',
+            'password': 'short',
+            'confirm_password': 'short',
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
+
+    def test_change_password_rejects_short_passwords(self):
+        form = ChangePasswordForm(data={
+            'password': 'short',
+            'confirm_password': 'short',
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
