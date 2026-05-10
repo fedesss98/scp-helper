@@ -41,6 +41,10 @@ class ThrottledLoginView(LoginView):
     def is_locked_out(self):
         return cache.get(f'{self.get_throttle_key()}:locked')
 
+    def get_lockout_message(self):
+        minutes = max(1, settings.LOGIN_LOCKOUT_SECONDS // 60)
+        return f'Too many failed login attempts. Try again in {minutes} minutes.'
+
     def form_invalid(self, form):
         if self.request.method == 'POST' and not getattr(self, '_skip_throttle_increment', False):
             key = self.get_throttle_key()
@@ -48,10 +52,7 @@ class ThrottledLoginView(LoginView):
             cache.set(key, attempts, settings.LOGIN_LOCKOUT_SECONDS)
             if attempts >= settings.LOGIN_MAX_ATTEMPTS:
                 cache.set(f'{key}:locked', True, settings.LOGIN_LOCKOUT_SECONDS)
-                form.add_error(
-                    None,
-                    f'Too many failed login attempts. Try again in {settings.LOGIN_LOCKOUT_SECONDS // 60} minutes.',
-                )
+                form.add_error(None, self.get_lockout_message())
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -63,11 +64,8 @@ class ThrottledLoginView(LoginView):
     def post(self, request, *args, **kwargs):
         if self.is_locked_out():
             self._skip_throttle_increment = True
-            form = self.get_form()
-            form.add_error(
-                None,
-                f'Too many failed login attempts. Try again in {settings.LOGIN_LOCKOUT_SECONDS // 60} minutes.',
-            )
+            form = self.get_form_class()(request=self.request)
+            form.add_error(None, self.get_lockout_message())
             return self.form_invalid(form)
         return super().post(request, *args, **kwargs)
 

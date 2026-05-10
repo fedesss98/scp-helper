@@ -39,7 +39,8 @@ This creates:
 - Admin user `admin`
 
 Set `ADMIN_PASSWORD` before running the script to choose the initial password.
-If it is not set, the script generates and prints a one-time password.
+In local development, if it is not set, the script generates and prints a one-time password.
+In production, `ADMIN_PASSWORD` is required.
 
 ### 5. Run the dev server
 ```bash
@@ -72,6 +73,13 @@ Use Django's built-in admin panel at `/django-admin/` or edit `setup_initial_dat
    ```bash
    python setup_initial_data.py
    ```
+
+Set production environment variables before deploying:
+- `SECRET_KEY`
+- `DATABASE_URL`
+- `ALLOWED_HOSTS`
+- `CSRF_TRUSTED_ORIGINS`
+- `ADMIN_PASSWORD`
 
 > **SQLite note**: Render's free tier has an ephemeral disk — your SQLite data
 > will reset on each deploy. For a persistent club app, either:
