@@ -1,6 +1,6 @@
 {% extends "bookings/base.html" %}
 {% load booking_extras %}
-{% block title %}Calendar — Rowing Club{% endblock %}
+{% block title %}Calendar - Rowing Club{% endblock %}
 {% block nav_cal %}class="active"{% endblock %}
 
 {% block extra_css %}
@@ -14,10 +14,15 @@
     gap: 1rem;
   }
 
+  .calendar-header h1 {
+    margin: 0;
+  }
+
   .week-nav {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
   .week-label {
@@ -29,189 +34,183 @@
     color: var(--text);
   }
 
-  /* ── Grid ── */
-  .calendar-grid {
-    overflow-x: auto;
-    border-radius: 12px;
+  .calendar-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .day-panel {
     border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.02);
+    overflow: hidden;
   }
 
-  .cal-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 700px;
+  .day-panel-today {
+    border-color: rgba(33,150,243,0.45);
   }
 
-  /* Header row: days */
-  .cal-table thead th {
-    background: var(--navy-mid);
-    padding: 0.75rem 0.5rem;
-    text-align: center;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-  }
-
-  .cal-table thead th:last-child { border-right: none; }
-
-  .day-name { display: block; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
-  .day-num { display: block; font-size: 1.3rem; color: var(--text); }
-  .day-today .day-num {
-    background: var(--sea-bright);
-    color: #fff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+  .day-heading {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    font-size: 1rem;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--border);
   }
 
-  /* Time slot rows */
-  .cal-table tbody tr:hover td { background: rgba(255,255,255,0.015); }
+  .day-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
 
-  .time-col {
-    background: var(--navy-mid);
-    padding: 0 0.75rem;
+  .day-name {
     font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .day-date {
     font-size: 0.85rem;
     color: var(--text-muted);
-    text-align: right;
-    white-space: nowrap;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    width: 90px;
   }
 
-  /* Each boat cell inside a day */
-  .day-cell {
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 0;
-  }
-  .day-cell:last-child { border-right: none; }
-
-  .boats-row {
-    display: flex;
-    height: 100%;
-  }
-
-  .boat-slot {
-    flex: 1;
-    padding: 0.5rem 0.4rem;
-    border-right: 1px solid var(--border);
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  .boat-slot:last-child { border-right: none; }
-
-  /* Boat label sub-header */
-  .boat-sub-header {
-    display: flex;
-    border-right: 1px solid var(--border);
-    border-bottom: 2px solid var(--border);
-  }
-  .boat-sub-header:last-child { border-right: none; }
-
-  .boat-label-cell {
-    flex: 1;
-    padding: 0.35rem 0.4rem;
-    font-size: 0.7rem;
+  .today-badge {
+    color: #fff;
+    background: var(--sea-bright);
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    text-align: center;
-    border-right: 1px solid var(--border);
+    letter-spacing: 0.05em;
   }
-  .boat-label-cell:last-child { border-right: none; }
 
-  /* Slot states */
-  .slot-free form button {
-    width: 100%;
-    background: rgba(33,150,243,0.12);
-    color: var(--sea-bright);
-    border: 1px dashed rgba(33,150,243,0.35);
-    border-radius: 6px;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.75rem;
+  .slot-list {
+    display: grid;
+  }
+
+  .slot-row {
+    display: grid;
+    grid-template-columns: minmax(82px, 100px) 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slot-row:last-child {
+    border-bottom: none;
+  }
+
+  .slot-time {
+    background: rgba(255,255,255,0.025);
+    border-right: 1px solid var(--border);
+    padding: 0.85rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.12rem;
+    min-height: 86px;
+  }
+
+  .slot-time strong {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+
+  .slot-time span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .boat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .boat-cell {
+    min-height: 86px;
+    padding: 0.75rem;
+    border-right: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .boat-cell:last-child {
+    border-right: none;
+  }
+
+  .boat-name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .seat-count {
+    color: var(--text-muted);
+    font-size: 0.72rem;
     font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    font-family: 'Barlow', sans-serif;
+    text-transform: none;
+    letter-spacing: 0;
     white-space: nowrap;
   }
-  .slot-free form button:hover {
-    background: rgba(33,150,243,0.25);
-    border-color: var(--sea-bright);
+
+  .booking-state {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    min-height: 34px;
   }
 
-  .slot-mine {
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .slot-mine .booked-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--gold);
-    text-align: center;
-  }
-
-  .slot-mine form button {
-    background: rgba(229,57,53,0.1);
-    color: var(--danger);
-    border: 1px dashed rgba(229,57,53,0.35);
-    border-radius: 6px;
-    padding: 0.2rem 0.4rem;
-    font-size: 0.68rem;
-    cursor: pointer;
-    font-family: 'Barlow', sans-serif;
-    transition: background 0.15s;
-  }
-  .slot-mine form button:hover { background: rgba(229,57,53,0.22); }
-
-  .slot-taken {
-    font-size: 0.72rem;
+  .booking-names {
     color: var(--text-muted);
-    text-align: center;
-    padding: 0.2rem;
+    font-size: 0.78rem;
+    line-height: 1.25;
   }
 
-  .slot-taken .taken-name {
-    font-weight: 600;
-    color: rgba(255,255,255,0.4);
+  .taken-name {
+    color: rgba(255,255,255,0.58);
     display: block;
+    font-weight: 600;
+  }
+
+  .booked-label {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 0.82rem;
   }
 
   .slot-past {
-    opacity: 0.3;
+    opacity: 0.42;
     pointer-events: none;
   }
 
-  .slot-unavailable {
-    color: rgba(255,255,255,0.18);
-    font-size: 0.75rem;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .slot-empty {
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
   }
 
-  /* Legend */
   .legend {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.25rem;
     margin-top: 1rem;
     flex-wrap: wrap;
   }
+
   .legend-item {
     display: flex;
     align-items: center;
@@ -219,150 +218,193 @@
     font-size: 0.82rem;
     color: var(--text-muted);
   }
+
   .legend-dot {
-    width: 12px; height: 12px;
+    width: 12px;
+    height: 12px;
     border-radius: 3px;
   }
 
-  /* Boat color headers */
-  .boat-header-color {
-    width: 4px;
-    border-radius: 2px;
-    margin-right: 4px;
-    display: inline-block;
-    height: 12px;
-    vertical-align: middle;
+  @media (max-width: 760px) {
+    .calendar-header {
+      align-items: stretch;
+    }
+
+    .week-nav {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .week-label {
+      grid-column: 1 / -1;
+      min-width: 0;
+      order: -1;
+      text-align: left;
+    }
+
+    .week-nav .btn {
+      width: 100%;
+    }
+
+    .slot-row {
+      grid-template-columns: 1fr;
+    }
+
+    .slot-time {
+      min-height: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: flex-start;
+    }
+
+    .boat-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .boat-cell {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .boat-cell:last-child {
+      border-bottom: none;
+    }
+
+    .booking-state {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .booking-state .btn,
+    .booking-state button {
+      width: 100%;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="calendar-header">
-  <h1 style="margin:0">🗓 Booking Calendar</h1>
+  <h1>Booking Calendar</h1>
   <div class="week-nav">
-    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm">← Prev</a>
+    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm">Prev</a>
     <span class="week-label">
-      {{ week_days.0|date:"d M" }} – {{ week_days.6|date:"d M Y" }}
+      {{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}
     </span>
-    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">Next →</a>
+    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">Next</a>
     {% if week_offset != 0 %}
     <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Today</a>
     {% endif %}
   </div>
 </div>
 
-<div class="calendar-grid">
-<table class="cal-table">
-  <thead>
-    <tr>
-      <th style="width:90px"></th>
-      {% for day in week_days %}
-      <th {% if day == today %}class="day-today"{% endif %}>
-        <span class="day-name">{{ day|date:"D" }}</span>
-        {% if day == today %}
-        <span class="day-num" style="display:flex">{{ day|date:"j" }}</span>
-        {% else %}
-        <span class="day-num">{{ day|date:"j" }}</span>
-        {% endif %}
-      </th>
-      {% endfor %}
-    </tr>
-    <tr>
-      <td class="time-col" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">Boat →</td>
-      {% for day in week_days %}
-      <td style="padding:0;border-right:1px solid var(--border);border-bottom:2px solid var(--border);">
-        <div style="display:flex">
-          {% for boat in boats %}
-          <div class="boat-label-cell" style="color:{{ boat.color }}">
-            {{ boat.name|truncatechars:12 }}
-          </div>
-          {% endfor %}
+<div class="calendar-list">
+  {% for section in day_sections %}
+  <section class="day-panel {% if section.date == today %}day-panel-today{% endif %}">
+    <header class="day-heading">
+      <div class="day-title">
+        <span class="day-name">{{ section.date|date:"l" }}</span>
+        <span class="day-date">{{ section.date|date:"d M Y" }}</span>
+      </div>
+      {% if section.date == today %}
+      <span class="today-badge">Today</span>
+      {% endif %}
+    </header>
+
+    {% if section.slots %}
+    <div class="slot-list">
+      {% for slot in section.slots %}
+      <div class="slot-row {% if section.date < today %}slot-past{% endif %}">
+        <div class="slot-time">
+          <strong>{{ slot.start_time|time:"H:i" }}</strong>
+          <span>until {{ slot.end_time|time:"H:i" }}</span>
         </div>
-      </td>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in slot_rows %}
-    <tr>
-      <td class="time-col">{{ row.label }}</td>
-      {% for cell in row.days %}
-      <td class="day-cell">
-        {% if cell.slot %}
-        <div class="boats-row">
+
+        <div class="boat-grid">
           {% for boat in boats %}
-          <div class="boat-slot
-            {% if cell.date < today %}slot-past
-            {% endif %}"
-            style="border-color: var(--border)">
+          {% get_slot_bookings booking_map boat.id section.date slot.start_time slot.end_time as slot_bookings %}
+          {% user_booking slot_bookings request.user as mine %}
+          <div class="boat-cell" style="border-left-color: {{ boat.color }}">
+            <div class="boat-name">
+              <span>{{ boat.name }}</span>
+              <span class="seat-count">{{ slot_bookings|length }}/{{ boat.seats }}</span>
+            </div>
 
-            {% get_slot_bookings booking_map boat.id cell.date row.start row.end as slot_bookings %}
-            {% user_booking slot_bookings request.user as mine %}
-
-            {% if cell.date < today %}
+            {% if section.date < today %}
               {% if slot_bookings %}
-              <div class="slot-taken">
+              <div class="booking-names">
                 {% for booking in slot_bookings %}
                 <span class="taken-name">{{ booking.athlete.username }}</span>
                 {% endfor %}
               </div>
+              {% else %}
+              <div class="booking-names">No bookings</div>
               {% endif %}
 
             {% elif mine %}
-              <div class="slot-mine" style="display:flex;flex-direction:column;align-items:center;gap:0.2rem;width:100%">
-                <span class="booked-label">✓ Yours</span>
-                <span style="font-size:0.68rem;color:var(--text-muted)">{{ slot_bookings|length }}/{{ boat.seats }} seats</span>
+              <div class="booking-state">
+                <span class="booked-label">Yours</span>
                 <form method="post" action="/cancel/{{ mine.id }}/">
                   {% csrf_token %}
                   <input type="hidden" name="week_offset" value="{{ week_offset }}">
-                  <button type="submit" onclick="return confirm('Cancel this booking?')">✕ Cancel</button>
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?')">Cancel</button>
                 </form>
               </div>
 
             {% elif slot_bookings|length < boat.seats %}
-              <div class="slot-free" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:0.25rem">
+              <div class="booking-state">
                 {% if slot_bookings %}
-                <span style="font-size:0.68rem;color:var(--text-muted)">{{ slot_bookings|length }}/{{ boat.seats }} seats</span>
+                <div class="booking-names">
+                  {% for booking in slot_bookings %}
+                  <span class="taken-name">{{ booking.athlete.username }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <span class="booking-names">Available</span>
                 {% endif %}
-                <a href="{% url 'book_slot' %}?date={{ cell.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ row.start|time:'H:i' }}&end_time={{ row.end|time:'H:i' }}" class="btn btn-primary btn-sm">+ Book</a>
+                <a href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Book</a>
               </div>
 
             {% else %}
-              <div class="slot-taken">
-                {% for booking in slot_bookings %}
-                <span class="taken-name">{{ booking.athlete.username }}</span>
-                {% endfor %}
-                <span>full</span>
+              <div class="booking-state">
+                <div class="booking-names">
+                  {% for booking in slot_bookings %}
+                  <span class="taken-name">{{ booking.athlete.username }}</span>
+                  {% endfor %}
+                  <span>Full</span>
+                </div>
                 {% if is_admin %}
                 {% for booking in slot_bookings %}
-                <form method="post" action="/cancel/{{ booking.id }}/" style="margin-top:0.2rem">
+                <form method="post" action="/cancel/{{ booking.id }}/">
                   {% csrf_token %}
                   <input type="hidden" name="week_offset" value="{{ week_offset }}">
-                  <button type="submit" style="background:rgba(229,57,53,0.1);color:#ef9a9a;border:1px dashed rgba(229,57,53,0.3);border-radius:4px;padding:0.15rem 0.3rem;font-size:0.65rem;cursor:pointer" onclick="return confirm('Remove this booking?')">remove</button>
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this booking?')">Remove</button>
                 </form>
                 {% endfor %}
                 {% endif %}
               </div>
             {% endif %}
-
           </div>
           {% endfor %}
         </div>
-        {% else %}
-        <div class="slot-unavailable">-</div>
-        {% endif %}
-      </td>
+      </div>
       {% endfor %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </div>
+    {% else %}
+    <div class="slot-empty">No bookable slots.</div>
+    {% endif %}
+  </section>
+  {% endfor %}
 </div>
 
 <div class="legend">
   <div class="legend-item">
     <div class="legend-dot" style="background:rgba(33,150,243,0.2);border:1px dashed rgba(33,150,243,0.5)"></div>
-    Free — click to book
+    Available
   </div>
   <div class="legend-item">
     <div class="legend-dot" style="background:rgba(240,165,0,0.2);border:1px solid var(--gold)"></div>
@@ -370,7 +412,7 @@
   </div>
   <div class="legend-item">
     <div class="legend-dot" style="background:rgba(255,255,255,0.08)"></div>
-    Taken
+    Full or past
   </div>
   {% for boat in boats %}
   <div class="legend-item">

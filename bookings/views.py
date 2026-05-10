@@ -72,29 +72,23 @@ def get_week_offset(request):
         return 0
 
 
-def build_slot_rows(week_days):
-    weekly_slots = list(BookableSlot.objects.filter(is_active=True).order_by('start_time', 'end_time', 'day_of_week'))
-    slots_by_day_and_time = {
-        (slot.day_of_week, slot.start_time, slot.end_time): slot
-        for slot in weekly_slots
-    }
-    unique_times = sorted({(slot.start_time, slot.end_time) for slot in weekly_slots})
+def build_day_sections(week_days):
+    weekly_slots = BookableSlot.objects.filter(is_active=True).order_by(
+        'day_of_week',
+        'start_time',
+        'end_time',
+    )
+    slots_by_day = defaultdict(list)
+    for slot in weekly_slots:
+        slots_by_day[slot.day_of_week].append(slot)
 
-    rows = []
-    for start, end in unique_times:
-        rows.append({
-            'start': start,
-            'end': end,
-            'label': f'{start:%H:%M}',
-            'days': [
-                {
-                    'date': day,
-                    'slot': slots_by_day_and_time.get((day.weekday(), start, end)),
-                }
-                for day in week_days
-            ],
-        })
-    return rows
+    return [
+        {
+            'date': day,
+            'slots': slots_by_day[day.weekday()],
+        }
+        for day in week_days
+    ]
 
 
 # ─── Calendar ────────────────────────────────────────────────────────────────
@@ -121,7 +115,7 @@ def calendar_view(request):
 
     return render(request, 'bookings/calendar.html', {
         'boats': boats,
-        'slot_rows': build_slot_rows(week_days),
+        'day_sections': build_day_sections(week_days),
         'week_days': week_days,
         'week_start': week_start,
         'week_offset': week_offset,

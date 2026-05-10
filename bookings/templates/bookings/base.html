@@ -33,7 +33,7 @@
     }
 
     /* ── Nav ── */
-    nav {
+    .site-nav {
       background: var(--navy-mid);
       border-bottom: 1px solid var(--border);
       padding: 0 1.5rem;
@@ -59,6 +59,34 @@
     }
 
     .nav-brand span { color: var(--text); }
+
+    .nav-toggle {
+      display: none;
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-toggle span {
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--text);
+      display: block;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
 
     .nav-links {
       display: flex;
@@ -88,6 +116,50 @@
     }
 
     .nav-user strong { color: var(--text); }
+
+    @media (max-width: 760px) {
+      .site-nav {
+        min-height: 56px;
+        height: auto;
+        padding: 0.55rem 1rem;
+        flex-wrap: wrap;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .nav-menu {
+        display: none;
+        flex-basis: 100%;
+        width: 100%;
+        padding-top: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .site-nav.nav-open .nav-menu {
+        display: flex;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+      }
+
+      .nav-links a {
+        padding: 0.65rem 0.75rem;
+      }
+
+      .nav-user {
+        justify-content: space-between;
+        border-top: 1px solid var(--border);
+        padding-top: 0.75rem;
+        flex-wrap: wrap;
+      }
+    }
 
     /* ── Layout ── */
     .container {
@@ -234,20 +306,27 @@
 <body>
 
 {% if user.is_authenticated %}
-<nav>
+<nav class="site-nav" data-nav>
   <a href="/calendar/" class="nav-brand">🚣 <span>Rowing</span>Club</a>
-  <div class="nav-links">
-    <a href="/calendar/" {% block nav_cal %}{% endblock %}>Calendar</a>
-    <a href="/my-bookings/" {% block nav_mine %}{% endblock %}>My Bookings</a>
-    {% if is_admin %}
-      <a href="/admin/users/" {% block nav_admin %}{% endblock %}>Athletes</a>
-      <a href="/admin/bookings/" {% block nav_allbk %}{% endblock %}>All Bookings</a>
-    {% endif %}
-  </div>
-  <div class="nav-user">
-    <strong>{{ user.username }}</strong>
-    {% if is_admin %}<span class="badge badge-admin">Admin</span>{% endif %}
-    <a href="/logout/" class="btn btn-ghost btn-sm">Log out</a>
+  <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" data-nav-toggle>
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <div class="nav-menu">
+    <div class="nav-links">
+      <a href="/calendar/" {% block nav_cal %}{% endblock %}>Calendar</a>
+      <a href="/my-bookings/" {% block nav_mine %}{% endblock %}>My Bookings</a>
+      {% if is_admin %}
+        <a href="/admin/users/" {% block nav_admin %}{% endblock %}>Athletes</a>
+        <a href="/admin/bookings/" {% block nav_allbk %}{% endblock %}>All Bookings</a>
+      {% endif %}
+    </div>
+    <div class="nav-user">
+      <strong>{{ user.username }}</strong>
+      {% if is_admin %}<span class="badge badge-admin">Admin</span>{% endif %}
+      <a href="/logout/" class="btn btn-ghost btn-sm">Log out</a>
+    </div>
   </div>
 </nav>
 {% endif %}
@@ -263,6 +342,16 @@
 
   {% block content %}{% endblock %}
 </div>
+
+<script>
+  document.querySelectorAll('[data-nav-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const nav = button.closest('[data-nav]');
+      const isOpen = nav.classList.toggle('nav-open');
+      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+</script>
 
 </body>
 </html>
