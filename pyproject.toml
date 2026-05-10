@@ -1,0 +1,21 @@
+[project]
+name = "vogapp"
+version = "0.1.0"
+description = "Rowing club boat booking app"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=4.2,<5.0",
+    "whitenoise>=6.6",
+    "gunicorn>=21.0",
+    "dj-database-url>=2.1",
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-debug-toolbar>=4.0",
+]
+
+[tool.django]
+settings_module = "vogapp.settings"

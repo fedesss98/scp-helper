@@ -1,8 +1,17 @@
 data/
 
+.env
+.env.*
+
 .venv
+.venv/
 .ipynb_checkpoints
 .virtual_documents
 .mypy_cache
+
+*.sqlite3
+
+__pycache__/
+staticfiles/
 
 
