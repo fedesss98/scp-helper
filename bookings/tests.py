@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from .forms import BookingForm, ChangePasswordForm, CreateAthleteForm
-from .models import Boat, Booking
+from .models import Boat, BookableSlot, Booking
 
 
 class BookingCapacityTests(TestCase):
@@ -18,6 +18,11 @@ class BookingCapacityTests(TestCase):
         self.bob = User.objects.create_user(username='bob')
         self.cara = User.objects.create_user(username='cara')
         self.booking_date = date(2026, 6, 1)
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
 
     def form_for(self, user, start, end):
         return BookingForm(
@@ -60,6 +65,11 @@ class BookingCapacityTests(TestCase):
         self.assertFalse(self.form_for(self.cara, '09:00', '10:00').is_valid())
 
     def test_checks_capacity_across_partial_overlaps(self):
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(9, 30),
+            end_time=time(10, 30),
+        )
         Booking.objects.create(
             boat=self.boat,
             athlete=self.alice,
@@ -78,6 +88,11 @@ class BookingCapacityTests(TestCase):
         self.assertTrue(self.form_for(self.cara, '09:30', '10:30').is_valid())
 
     def test_rejects_overlapping_booking_for_same_athlete(self):
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(9, 30),
+            end_time=time(10, 30),
+        )
         Booking.objects.create(
             boat=self.boat,
             athlete=self.alice,
@@ -87,6 +102,9 @@ class BookingCapacityTests(TestCase):
         )
 
         self.assertFalse(self.form_for(self.alice, '09:30', '10:30').is_valid())
+
+    def test_rejects_times_that_are_not_admin_generated_slots(self):
+        self.assertFalse(self.form_for(self.alice, '12:00', '13:00').is_valid())
 
 
 class AdminPasswordFormTests(TestCase):

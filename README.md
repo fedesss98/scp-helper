@@ -90,7 +90,18 @@ Set production environment variables before deploying:
 
 ## Customising Calendar Slots
 
-Edit the slot constants in `bookings/views.py`. Bookings themselves store `start_time` and `end_time`.
+Bookable slots are managed in Django admin at `/django-admin/bookings/bookableslot/`.
+The calendar only shows active weekly slots. `setup_initial_data.py` seeds this schedule:
+
+- Monday: 15:30
+- Tuesday: 07:00, 14:00, 15:30
+- Wednesday: 15:30
+- Thursday: 07:00, 14:00, 15:30
+- Friday: 15:30
+- Saturday: 08:00, 10:30
+- Sunday: 08:30
+
+Seeded slots are 30 minutes long by default; edit their end time in Django admin if sessions should last longer.
 
 ## Boat Categories and Seats
 

@@ -196,6 +196,15 @@
     pointer-events: none;
   }
 
+  .slot-unavailable {
+    color: rgba(255,255,255,0.18);
+    font-size: 0.75rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Legend */
   .legend {
     display: flex;
@@ -274,22 +283,23 @@
     </tr>
   </thead>
   <tbody>
-    {% for slot in time_slots %}
+    {% for row in slot_rows %}
     <tr>
-      <td class="time-col">{{ slot.label }}</td>
-      {% for day in week_days %}
+      <td class="time-col">{{ row.label }}</td>
+      {% for cell in row.days %}
       <td class="day-cell">
+        {% if cell.slot %}
         <div class="boats-row">
           {% for boat in boats %}
           <div class="boat-slot
-            {% if day < today %}slot-past
+            {% if cell.date < today %}slot-past
             {% endif %}"
-            style="border-color: rgba({{ boat.color|slice:'1:' }}, 0.1)">
+            style="border-color: var(--border)">
 
-            {% get_slot_bookings booking_map boat.id day slot.start slot.end as slot_bookings %}
+            {% get_slot_bookings booking_map boat.id cell.date row.start row.end as slot_bookings %}
             {% user_booking slot_bookings request.user as mine %}
 
-            {% if day < today %}
+            {% if cell.date < today %}
               {% if slot_bookings %}
               <div class="slot-taken">
                 {% for booking in slot_bookings %}
@@ -314,7 +324,7 @@
                 {% if slot_bookings %}
                 <span style="font-size:0.68rem;color:var(--text-muted)">{{ slot_bookings|length }}/{{ boat.seats }} seats</span>
                 {% endif %}
-                <a href="{% url 'book_slot' %}?date={{ day|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start|time:'H:i' }}&end_time={{ slot.end|time:'H:i' }}" class="btn btn-primary btn-sm">+ Book</a>
+                <a href="{% url 'book_slot' %}?date={{ cell.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ row.start|time:'H:i' }}&end_time={{ row.end|time:'H:i' }}" class="btn btn-primary btn-sm">+ Book</a>
               </div>
 
             {% else %}
@@ -338,6 +348,9 @@
           </div>
           {% endfor %}
         </div>
+        {% else %}
+        <div class="slot-unavailable">-</div>
+        {% endif %}
       </td>
       {% endfor %}
     </tr>

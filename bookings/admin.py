@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import Boat, Booking
+from .models import Boat, BookableSlot, Booking
+
+
+@admin.register(BookableSlot)
+class BookableSlotAdmin(admin.ModelAdmin):
+    list_display = ['day_of_week', 'start_time', 'end_time', 'is_active']
+    list_editable = ['is_active']
+    list_filter = ['day_of_week', 'is_active']
+    ordering = ['day_of_week', 'start_time']
+
 
 @admin.register(Boat)
 class BoatAdmin(admin.ModelAdmin):

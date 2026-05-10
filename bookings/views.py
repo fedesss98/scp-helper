@@ -6,17 +6,12 @@ from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
 from django.views.decorators.http import require_POST
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 import hashlib
-from .models import Boat, Booking
+from .models import Boat, BookableSlot, Booking
 from .forms import CreateAthleteForm, ChangePasswordForm, BookingForm
 
 from collections import defaultdict
-
-
-SLOT_START_HOUR = 6
-SLOT_END_HOUR = 20
-SLOT_MINUTES = 30
 
 
 def is_admin(user):
@@ -70,29 +65,36 @@ class ThrottledLoginView(LoginView):
         return super().post(request, *args, **kwargs)
 
 
-def build_time_slots():
-    slots = []
-    cursor = time(SLOT_START_HOUR, 0)
-    end_of_day = time(SLOT_END_HOUR, 0)
-
-    while cursor < end_of_day:
-        minutes = cursor.hour * 60 + cursor.minute + SLOT_MINUTES
-        slot_end = time(minutes // 60, minutes % 60)
-        slots.append({
-            'start': cursor,
-            'end': slot_end,
-            'label': f'{cursor:%H:%M}',
-        })
-        cursor = slot_end
-
-    return slots
-
-
 def get_week_offset(request):
     try:
         return int(request.GET.get('week', 0))
     except ValueError:
         return 0
+
+
+def build_slot_rows(week_days):
+    weekly_slots = list(BookableSlot.objects.filter(is_active=True).order_by('start_time', 'end_time', 'day_of_week'))
+    slots_by_day_and_time = {
+        (slot.day_of_week, slot.start_time, slot.end_time): slot
+        for slot in weekly_slots
+    }
+    unique_times = sorted({(slot.start_time, slot.end_time) for slot in weekly_slots})
+
+    rows = []
+    for start, end in unique_times:
+        rows.append({
+            'start': start,
+            'end': end,
+            'label': f'{start:%H:%M}',
+            'days': [
+                {
+                    'date': day,
+                    'slot': slots_by_day_and_time.get((day.weekday(), start, end)),
+                }
+                for day in week_days
+            ],
+        })
+    return rows
 
 
 # ─── Calendar ────────────────────────────────────────────────────────────────
@@ -119,7 +121,7 @@ def calendar_view(request):
 
     return render(request, 'bookings/calendar.html', {
         'boats': boats,
-        'time_slots': build_time_slots(),
+        'slot_rows': build_slot_rows(week_days),
         'week_days': week_days,
         'week_start': week_start,
         'week_offset': week_offset,

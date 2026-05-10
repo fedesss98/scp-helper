@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from datetime import date as current_date
-from .models import Booking
+from .models import BookableSlot, Booking
 
 
 PASSWORD_MIN_LENGTH = 8
@@ -89,6 +89,14 @@ class BookingForm(forms.ModelForm):
         if start and end:
             if end <= start:
                 raise ValidationError("End time must be after start time.")
+
+            if date and not BookableSlot.objects.filter(
+                day_of_week=date.weekday(),
+                start_time=start,
+                end_time=end,
+                is_active=True,
+            ).exists():
+                raise ValidationError("This time is not available for booking.")
 
             if boat and date:
                 if self.user and Booking.objects.filter(
