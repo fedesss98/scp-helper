@@ -1,7 +1,6 @@
 {% extends "bookings/base.html" %}
 {% load booking_extras %}
-{% block title %}Calendar - Rowing Club{% endblock %}
-
+{% block title %}Calendar - VogApp{% endblock %}
 {% block extra_css %}
 <style>
   .calendar-header {
@@ -52,7 +51,9 @@
 
   .day-panel-today {
     border-color: #93c5fd;
-    box-shadow: 0 0 0 3px rgba(147,197,253,0.28), var(--shadow-sm);
+    box-shadow:
+      0 0 0 3px rgba(147, 197, 253, 0.28),
+      var(--shadow-sm);
   }
 
   .day-heading {
@@ -117,7 +118,7 @@
     flex-direction: column;
     justify-content: center;
     gap: 0.12rem;
-    min-height: 86px;
+    min-height: 128px;
   }
 
   .slot-time strong {
@@ -137,7 +138,7 @@
   }
 
   .boat-cell {
-    min-height: 86px;
+    min-height: 128px;
     padding: 0.75rem;
     border-right: 1px solid var(--border);
     border-left: 4px solid var(--border);
@@ -178,11 +179,34 @@
 
   .booking-state {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    min-height: 70px;
+  }
+
+  .booking-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+    margin-left: auto;
+  }
+
+  .booking-management-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  .booking-management-row {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.65rem;
     flex-wrap: wrap;
-    min-height: 34px;
   }
 
   .booking-names {
@@ -195,6 +219,7 @@
     color: #475569;
     display: block;
     font-weight: 600;
+    font-size: 0.78rem;
   }
 
   .booked-label {
@@ -296,6 +321,13 @@
     .booking-state {
       align-items: stretch;
       flex-direction: column;
+      min-height: 0;
+    }
+
+    .booking-actions {
+      width: 100%;
+      align-items: stretch;
+      margin-left: 0;
     }
 
     .booking-state .btn,
@@ -310,11 +342,19 @@
 <div class="calendar-header">
   <h1>Booking Calendar</h1>
   <div class="week-nav">
-    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm">Prev</a>
+    <a
+      href="/calendar/?week={{ week_offset|add:'-1' }}"
+      class="btn btn-ghost btn-sm"
+      >Prev</a
+    >
     <span class="week-label">
       {{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}
     </span>
-    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">Next</a>
+    <a
+      href="/calendar/?week={{ week_offset|add:'1' }}"
+      class="btn btn-ghost btn-sm"
+      >Next</a
+    >
     {% if week_offset != 0 %}
     <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Today</a>
     {% endif %}
@@ -323,7 +363,9 @@
 
 <div class="calendar-list">
   {% for section in day_sections %}
-  <section class="day-panel {% if section.date == today %}day-panel-today{% endif %}">
+  <section
+    class="day-panel {% if section.date == today %}day-panel-today{% endif %}"
+  >
     <header class="day-heading">
       <div class="day-title">
         <span class="day-name">{{ section.date|date:"l" }}</span>
@@ -351,10 +393,52 @@
           <div class="boat-cell" style="border-left-color: {{ boat.color }}">
             <div class="boat-name">
               <span>{{ boat.name }}</span>
-              <span class="seat-count">{{ slot_bookings|length }}/{{ boat.seats }}</span>
+              <span class="seat-count"
+                >{{ slot_bookings|length }}/{{ boat.seats }}</span
+              >
             </div>
 
-            {% if section.date < today %}
+            {% if section.date < today %} {% if slot_bookings %}
+            <div class="booking-names">
+              {% for booking in slot_bookings %}
+              <span class="taken-name">{{ booking.athlete.username }}</span>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="booking-names">No bookings</div>
+            {% endif %} {% elif mine %}
+            <div class="booking-state">
+              <div>
+                <span class="booked-label">Yours</span>
+                {% if companions %}
+                <div class="booking-names" style="margin-top: 0.4rem">
+                  {% for booking in companions %}
+                  <span class="taken-name">{{ booking.athlete.username }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+              <div class="booking-actions">
+                <form method="post" action="/cancel/{{ mine.id }}/">
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="week_offset"
+                    value="{{ week_offset }}"
+                  />
+                  <button
+                    type="submit"
+                    class="btn btn-danger btn-sm"
+                    onclick="return confirm('Cancel this booking?');"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {% elif slot_bookings|length < boat.seats %}
+            <div class="booking-state">
               {% if slot_bookings %}
               <div class="booking-names">
                 {% for booking in slot_bookings %}
@@ -362,64 +446,59 @@
                 {% endfor %}
               </div>
               {% else %}
-              <div class="booking-names">No bookings</div>
+              <span class="booking-names">Available</span>
+              {% endif %} {% if is_admin %}
+              <a
+                href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}"
+                class="btn btn-primary btn-sm"
+                >Assign</a
+              >
+              {% else %}
+              <a
+                href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}"
+                class="btn btn-primary btn-sm"
+                >Book</a
+              >
               {% endif %}
-
-            {% elif mine %}
-              <div class="booking-state">
-                <div>
-                  <span class="booked-label">Yours</span>
-                  {% if companions %}
-                  <div class="booking-names" style="margin-top:0.4rem">
-                    {% for booking in companions %}
-                    <span class="taken-name">{{ booking.athlete.username }}</span>
-                    {% endfor %}
-                  </div>
-                  {% endif %}
-                </div>
-                <form method="post" action="/cancel/{{ mine.id }}/">
-                  {% csrf_token %}
-                  <input type="hidden" name="week_offset" value="{{ week_offset }}">
-                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?')">Cancel</button>
-                </form>
-              </div>
-
-            {% elif slot_bookings|length < boat.seats %}
-              <div class="booking-state">
-                {% if slot_bookings %}
-                <div class="booking-names">
-                  {% for booking in slot_bookings %}
-                  <span class="taken-name">{{ booking.athlete.username }}</span>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <span class="booking-names">Available</span>
-                {% endif %}
-                {% if is_admin %}
-                <a href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Assign</a>
-                {% else %}
-                <a href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Book</a>
-                {% endif %}
-              </div>
+            </div>
 
             {% else %}
-              <div class="booking-state">
-                <div class="booking-names">
-                  {% for booking in slot_bookings %}
-                  <span class="taken-name">{{ booking.athlete.username }}</span>
-                  {% endfor %}
-                  <span>Full</span>
-                </div>
-                {% if is_admin %}
+            <div class="booking-state">
+              {% if is_admin %}
+              <div class="booking-management-list">
                 {% for booking in slot_bookings %}
-                <form method="post" action="/cancel/{{ booking.id }}/">
-                  {% csrf_token %}
-                  <input type="hidden" name="week_offset" value="{{ week_offset }}">
-                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this booking?')">Remove</button>
-                </form>
+                <div class="booking-management-row">
+                  <span class="taken-name">{{ booking.athlete.username }}</span>
+                  <form method="post" action="/cancel/{{ booking.id }}/">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="week_offset"
+                      value="{{ week_offset }}"
+                    />
+                    <button
+                      type="submit"
+                      class="btn btn-danger btn-sm"
+                      onclick="return confirm('Remove this booking?');"
+                    >
+                      Remove
+                    </button>
+                  </form>
+                </div>
                 {% endfor %}
-                {% endif %}
+                <span class="booking-names" style="text-align: center"
+                  >Full</span
+                >
               </div>
+              {% else %}
+              <div class="booking-names">
+                {% for booking in slot_bookings %}
+                <span class="taken-name">{{ booking.athlete.username }}</span>
+                {% endfor %}
+                <span>Full</span>
+              </div>
+              {% endif %}
+            </div>
             {% endif %}
           </div>
           {% endfor %}
@@ -436,15 +515,24 @@
 
 <div class="legend">
   <div class="legend-item">
-    <div class="legend-dot" style="background:#dbeafe;border:1px solid #93c5fd"></div>
+    <div
+      class="legend-dot"
+      style="background: #dbeafe; border: 1px solid #93c5fd"
+    ></div>
     Available
   </div>
   <div class="legend-item">
-    <div class="legend-dot" style="background:#fef3c7;border:1px solid #f59e0b"></div>
+    <div
+      class="legend-dot"
+      style="background: #fef3c7; border: 1px solid #f59e0b"
+    ></div>
     Your booking
   </div>
   <div class="legend-item">
-    <div class="legend-dot" style="background:#f1f5f9;border:1px solid #cbd5e1"></div>
+    <div
+      class="legend-dot"
+      style="background: #f1f5f9; border: 1px solid #cbd5e1"
+    ></div>
     Full or past
   </div>
   {% for boat in boats %}
