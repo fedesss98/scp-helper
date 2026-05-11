@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import BookingForm, ChangePasswordForm, CreateAthleteForm
+from .forms import AdminBookingForm, BookingForm, ChangePasswordForm, CreateAthleteForm
 from .models import Boat, BookableSlot, Booking
 
 
@@ -209,3 +209,130 @@ class AdminSlotManagementTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('password', form.errors)
+
+
+class AdminBookingManagementTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username='admin',
+            email='',
+            password='password123',
+        )
+        self.athlete = User.objects.create_user(
+            username='user1',
+            password='password123',
+        )
+        self.other_athlete = User.objects.create_user(
+            username='user2',
+            password='password123',
+        )
+        self.boat = Boat.objects.create(
+            name='Admin Single',
+            category=Boat.CATEGORY_SINGLE_COASTAL,
+            seats=1,
+        )
+        self.other_boat = Boat.objects.create(
+            name='Admin Double',
+            category=Boat.CATEGORY_DOUBLE,
+            seats=2,
+        )
+        self.booking_date = date(2026, 6, 1)
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+        )
+
+    def booking_payload(self, **overrides):
+        payload = {
+            'athlete': self.athlete.id,
+            'boat': self.boat.id,
+            'date': self.booking_date.isoformat(),
+            'start_time': '09:00',
+            'end_time': '10:00',
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_booking_manager_requires_admin(self):
+        self.client.login(username='user1', password='password123')
+
+        response = self.client.get(reverse('admin_create_booking'), secure=True)
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_admin_can_create_booking_for_athlete(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_create_booking'), self.booking_payload(), secure=True)
+
+        self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
+        self.assertTrue(Booking.objects.filter(
+            athlete=self.athlete,
+            boat=self.boat,
+            date=self.booking_date,
+            start_time='09:00',
+            end_time='10:00',
+        ).exists())
+
+    def test_admin_can_edit_booking(self):
+        booking = Booking.objects.create(
+            athlete=self.athlete,
+            boat=self.boat,
+            date=self.booking_date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse('admin_edit_booking', args=[booking.id]),
+            self.booking_payload(
+                athlete=self.other_athlete.id,
+                boat=self.other_boat.id,
+                start_time='10:00',
+                end_time='11:00',
+            ),
+            secure=True,
+        )
+        booking.refresh_from_db()
+
+        self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
+        self.assertEqual(booking.athlete, self.other_athlete)
+        self.assertEqual(booking.boat, self.other_boat)
+        self.assertEqual(booking.start_time, time(10, 0))
+        self.assertEqual(booking.end_time, time(11, 0))
+
+    def test_admin_can_delete_booking(self):
+        booking = Booking.objects.create(
+            athlete=self.athlete,
+            boat=self.boat,
+            date=self.booking_date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_delete_booking', args=[booking.id]), secure=True)
+
+        self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
+        self.assertFalse(Booking.objects.filter(id=booking.id).exists())
+
+    def test_admin_booking_form_rejects_overlapping_booking_for_same_athlete(self):
+        Booking.objects.create(
+            athlete=self.athlete,
+            boat=self.other_boat,
+            date=self.booking_date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+
+        form = AdminBookingForm(data=self.booking_payload())
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('This athlete already has a booking during this time.', form.non_field_errors())

@@ -21,4 +21,7 @@ urlpatterns = [
     path('admin/slots/<int:slot_id>/toggle/', views.admin_toggle_slot, name='admin_toggle_slot'),
     path('admin/slots/<int:slot_id>/delete/', views.admin_delete_slot, name='admin_delete_slot'),
     path('admin/bookings/', views.admin_all_bookings, name='admin_all_bookings'),
+    path('admin/bookings/create/', views.admin_create_booking, name='admin_create_booking'),
+    path('admin/bookings/<int:booking_id>/edit/', views.admin_edit_booking, name='admin_edit_booking'),
+    path('admin/bookings/<int:booking_id>/delete/', views.admin_delete_booking, name='admin_delete_booking'),
 ]

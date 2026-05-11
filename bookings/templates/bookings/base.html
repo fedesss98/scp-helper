@@ -435,7 +435,7 @@
           {% if is_admin %}
           <a href="/admin/users/" class="{% if '/admin/users/' in request.path %}active{% endif %}">Athletes</a>
           <a href="/admin/slots/" class="{% if '/admin/slots/' in request.path %}active{% endif %}">Slots</a>
-          <a href="/admin/bookings/" class="{% if request.path == '/admin/bookings/' %}active{% endif %}">All Bookings</a>
+          <a href="/admin/bookings/" class="{% if '/admin/bookings/' in request.path %}active{% endif %}">All Bookings</a>
           {% endif %}
         </div>
         <div class="nav-user">

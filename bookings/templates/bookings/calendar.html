@@ -385,7 +385,11 @@
                 {% else %}
                 <span class="booking-names">Available</span>
                 {% endif %}
+                {% if is_admin %}
+                <a href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Assign</a>
+                {% else %}
                 <a href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Book</a>
+                {% endif %}
               </div>
 
             {% else %}

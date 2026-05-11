@@ -86,6 +86,63 @@ class BookableSlotForm(forms.ModelForm):
         return cleaned
 
 
+def validate_booking_rules(*, cleaned, athlete, instance):
+    start = cleaned.get('start_time')
+    end = cleaned.get('end_time')
+    boat = cleaned.get('boat')
+    date = cleaned.get('date')
+
+    if date and date < current_date.today():
+        raise ValidationError("Cannot book a past date.")
+
+    if start and end:
+        if end <= start:
+            raise ValidationError("End time must be after start time.")
+
+        if date and not BookableSlot.objects.filter(
+            day_of_week=date.weekday(),
+            start_time=start,
+            end_time=end,
+            is_active=True,
+        ).exists():
+            raise ValidationError("This time is not available for booking.")
+
+        if boat and date:
+            if athlete and Booking.objects.filter(
+                athlete=athlete,
+                date=date,
+                start_time__lt=end,
+                end_time__gt=start,
+            ).exclude(pk=instance.pk).exists():
+                raise ValidationError("This athlete already has a booking during this time.")
+
+            overlapping_bookings = list(Booking.objects.filter(
+                boat=boat,
+                date=date,
+                start_time__lt=end,
+                end_time__gt=start,
+            ).exclude(pk=instance.pk))
+
+            boundaries = {start, end}
+            for booking in overlapping_bookings:
+                if start < booking.start_time < end:
+                    boundaries.add(booking.start_time)
+                if start < booking.end_time < end:
+                    boundaries.add(booking.end_time)
+
+            ordered_boundaries = sorted(boundaries)
+            for index, segment_start in enumerate(ordered_boundaries[:-1]):
+                segment_end = ordered_boundaries[index + 1]
+                booked_seats = sum(
+                    existing.start_time < segment_end and existing.end_time > segment_start
+                    for existing in overlapping_bookings
+                )
+                if booked_seats >= boat.seats:
+                    raise ValidationError(
+                        f"{boat.name} already has all {boat.seats} seat(s) booked during this time."
+                    )
+
+
 class BookingForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,59 +159,34 @@ class BookingForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        start = cleaned.get('start_time')
-        end   = cleaned.get('end_time')
-        boat  = cleaned.get('boat')
-        date  = cleaned.get('date')
+        try:
+            validate_booking_rules(cleaned=cleaned, athlete=self.user, instance=self.instance)
+        except ValidationError as error:
+            if self.user and error.messages == ["This athlete already has a booking during this time."]:
+                raise ValidationError("You already have a booking during this time.")
+            raise
+        return cleaned
 
-        if date and date < current_date.today():
-            raise ValidationError("Cannot book a past date.")
 
-        if start and end:
-            if end <= start:
-                raise ValidationError("End time must be after start time.")
+class AdminBookingForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ['athlete', 'boat', 'date', 'start_time', 'end_time']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
+        }
 
-            if date and not BookableSlot.objects.filter(
-                day_of_week=date.weekday(),
-                start_time=start,
-                end_time=end,
-                is_active=True,
-            ).exists():
-                raise ValidationError("This time is not available for booking.")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['athlete'].queryset = User.objects.filter(is_superuser=False).order_by('username')
 
-            if boat and date:
-                if self.user and Booking.objects.filter(
-                    athlete=self.user,
-                    date=date,
-                    start_time__lt=end,
-                    end_time__gt=start,
-                ).exclude(pk=self.instance.pk).exists():
-                    raise ValidationError("You already have a booking during this time.")
-
-                overlapping_bookings = list(Booking.objects.filter(
-                    boat=boat,
-                    date=date,
-                    start_time__lt=end,
-                    end_time__gt=start,
-                ).exclude(pk=self.instance.pk))
-
-                boundaries = {start, end}
-                for booking in overlapping_bookings:
-                    if start < booking.start_time < end:
-                        boundaries.add(booking.start_time)
-                    if start < booking.end_time < end:
-                        boundaries.add(booking.end_time)
-
-                ordered_boundaries = sorted(boundaries)
-                for index, segment_start in enumerate(ordered_boundaries[:-1]):
-                    segment_end = ordered_boundaries[index + 1]
-                    booked_seats = sum(
-                        existing.start_time < segment_end and existing.end_time > segment_start
-                        for existing in overlapping_bookings
-                    )
-                    if booked_seats >= boat.seats:
-                        raise ValidationError(
-                            f"{boat.name} already has all {boat.seats} seat(s) booked during this time."
-                        )
-
+    def clean(self):
+        cleaned = super().clean()
+        validate_booking_rules(
+            cleaned=cleaned,
+            athlete=cleaned.get('athlete'),
+            instance=self.instance,
+        )
         return cleaned
