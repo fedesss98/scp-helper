@@ -9,7 +9,12 @@ from django.views.decorators.http import require_POST
 from datetime import date, timedelta
 import hashlib
 from .models import Boat, BookableSlot, Booking
-from .forms import CreateAthleteForm, ChangePasswordForm, BookingForm
+from .forms import (
+    BookableSlotForm,
+    BookingForm,
+    ChangePasswordForm,
+    CreateAthleteForm,
+)
 
 from collections import defaultdict
 
@@ -244,6 +249,91 @@ def admin_delete_user(request, user_id):
     athlete.delete()
     messages.success(request, f'Athlete "{username}" deleted.')
     return redirect('admin_users')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_slots(request):
+    slots = BookableSlot.objects.all().order_by('day_of_week', 'start_time', 'end_time')
+    slots_by_day = defaultdict(list)
+    for slot in slots:
+        slots_by_day[slot.day_of_week].append(slot)
+
+    slot_groups = [
+        {
+            'day': day,
+            'label': label,
+            'slots': slots_by_day[day],
+        }
+        for day, label in BookableSlot.DAY_CHOICES
+    ]
+
+    return render(request, 'bookings/admin_slots.html', {
+        'slot_groups': slot_groups,
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_create_slot(request):
+    if request.method == 'POST':
+        form = BookableSlotForm(request.POST)
+        if form.is_valid():
+            slot = form.save()
+            messages.success(request, f'Slot "{slot}" created.')
+            return redirect('admin_slots')
+    else:
+        form = BookableSlotForm()
+
+    return render(request, 'bookings/admin_slot_form.html', {
+        'form': form,
+        'title': 'Create Slot',
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_edit_slot(request, slot_id):
+    slot = get_object_or_404(BookableSlot, pk=slot_id)
+    if request.method == 'POST':
+        form = BookableSlotForm(request.POST, instance=slot)
+        if form.is_valid():
+            slot = form.save()
+            messages.success(request, f'Slot "{slot}" updated.')
+            return redirect('admin_slots')
+    else:
+        form = BookableSlotForm(instance=slot)
+
+    return render(request, 'bookings/admin_slot_form.html', {
+        'form': form,
+        'title': f'Edit {slot}',
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def admin_toggle_slot(request, slot_id):
+    slot = get_object_or_404(BookableSlot, pk=slot_id)
+    slot.is_active = not slot.is_active
+    slot.save(update_fields=['is_active'])
+    state = 'enabled' if slot.is_active else 'disabled'
+    messages.success(request, f'Slot "{slot}" {state}.')
+    return redirect('admin_slots')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def admin_delete_slot(request, slot_id):
+    slot = get_object_or_404(BookableSlot, pk=slot_id)
+    label = str(slot)
+    slot.delete()
+    messages.success(request, f'Slot "{label}" deleted.')
+    return redirect('admin_slots')
 
 
 @login_required

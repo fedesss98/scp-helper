@@ -62,6 +62,30 @@ class ChangePasswordForm(forms.Form):
         return cleaned_data
 
 
+class BookableSlotForm(forms.ModelForm):
+    class Meta:
+        model = BookableSlot
+        fields = ['day_of_week', 'start_time', 'end_time', 'is_active']
+        labels = {
+            'day_of_week': 'Day',
+            'start_time': 'Start time',
+            'end_time': 'End time',
+            'is_active': 'Show on calendar',
+        }
+        widgets = {
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get('start_time')
+        end = cleaned.get('end_time')
+        if start and end and end <= start:
+            raise ValidationError("End time must be after start time.")
+        return cleaned
+
+
 class BookingForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

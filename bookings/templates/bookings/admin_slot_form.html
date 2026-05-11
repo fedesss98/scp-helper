@@ -1,0 +1,40 @@
+{% extends "bookings/base.html" %}
+{% block title %}{{ title }} - VogApp{% endblock %}
+
+{% block content %}
+<div style="max-width:520px">
+  <div style="margin-bottom:1rem">
+    <a href="{% url 'admin_slots' %}" style="color:var(--text-muted);text-decoration:none;font-size:.9rem">Back to Slots</a>
+  </div>
+
+  <h1>{{ title }}</h1>
+
+  <div class="card">
+    {% if form.non_field_errors %}
+    <div class="form-errors">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+        <p style="color:var(--text-muted);font-size:.8rem;margin-top:.25rem">{{ field.help_text }}</p>
+        {% endif %}
+        {% if field.errors %}
+        <p style="color:#b91c1c;font-size:.82rem;margin-top:.3rem">{{ field.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:.75rem;margin-top:.5rem;flex-wrap:wrap">
+        <button type="submit" class="btn btn-primary">Save Slot</button>
+        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -15,5 +15,10 @@ urlpatterns = [
     path('admin/users/create/', views.admin_create_user, name='admin_create_user'),
     path('admin/users/<int:user_id>/password/', views.admin_change_password, name='admin_change_password'),
     path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    path('admin/slots/', views.admin_slots, name='admin_slots'),
+    path('admin/slots/create/', views.admin_create_slot, name='admin_create_slot'),
+    path('admin/slots/<int:slot_id>/edit/', views.admin_edit_slot, name='admin_edit_slot'),
+    path('admin/slots/<int:slot_id>/toggle/', views.admin_toggle_slot, name='admin_toggle_slot'),
+    path('admin/slots/<int:slot_id>/delete/', views.admin_delete_slot, name='admin_delete_slot'),
     path('admin/bookings/', views.admin_all_bookings, name='admin_all_bookings'),
 ]
