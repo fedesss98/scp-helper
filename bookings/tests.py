@@ -120,6 +120,19 @@ class AdminPasswordFormTests(TestCase):
         self.assertIn('password', form.errors)
 
 
+class LogoutNavigationTests(TestCase):
+    def test_nav_uses_post_form_for_logout(self):
+        user = User.objects.create_user(username='athlete', password='password123')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('calendar'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<form method="post" action="/logout/" class="logout-form">')
+        self.assertContains(response, 'Log out')
+        self.assertNotContains(response, 'href="/logout/"')
+
+
 class AdminSlotManagementTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(
