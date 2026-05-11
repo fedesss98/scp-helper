@@ -10,6 +10,7 @@ from datetime import date, timedelta
 import hashlib
 from .models import Boat, BookableSlot, Booking
 from .forms import (
+    AdminBookingForm,
     BookableSlotForm,
     BookingForm,
     ChangePasswordForm,
@@ -344,3 +345,67 @@ def admin_all_bookings(request):
         'bookings': bookings,
         'is_admin': True,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_create_booking(request):
+    if request.method == 'POST':
+        form = AdminBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save()
+            messages.success(
+                request,
+                f'Booking created for {booking.athlete.username}: {booking.boat.name} on '
+                f'{booking.date} {booking.start_time:%H:%M}–{booking.end_time:%H:%M}.',
+            )
+            return redirect('admin_all_bookings')
+    else:
+        form = AdminBookingForm(initial={
+            'athlete': request.GET.get('athlete'),
+            'boat': request.GET.get('boat'),
+            'date': request.GET.get('date'),
+            'start_time': request.GET.get('start_time'),
+            'end_time': request.GET.get('end_time'),
+        })
+
+    return render(request, 'bookings/admin_booking_form.html', {
+        'form': form,
+        'title': 'Create Booking',
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_edit_booking(request, booking_id):
+    booking = get_object_or_404(Booking.objects.select_related('athlete', 'boat'), pk=booking_id)
+    if request.method == 'POST':
+        form = AdminBookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            booking = form.save()
+            messages.success(
+                request,
+                f'Booking updated for {booking.athlete.username}: {booking.boat.name} on '
+                f'{booking.date} {booking.start_time:%H:%M}–{booking.end_time:%H:%M}.',
+            )
+            return redirect('admin_all_bookings')
+    else:
+        form = AdminBookingForm(instance=booking)
+
+    return render(request, 'bookings/admin_booking_form.html', {
+        'form': form,
+        'title': f'Edit Booking for {booking.athlete.username}',
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def admin_delete_booking(request, booking_id):
+    booking = get_object_or_404(Booking.objects.select_related('athlete', 'boat'), pk=booking_id)
+    label = f'{booking.athlete.username} - {booking.boat.name} on {booking.date}'
+    booking.delete()
+    messages.success(request, f'Booking "{label}" deleted.')
+    return redirect('admin_all_bookings')
