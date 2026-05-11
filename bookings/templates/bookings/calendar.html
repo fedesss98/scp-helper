@@ -347,6 +347,7 @@
           {% for boat in boats %}
           {% get_slot_bookings booking_map boat.id section.date slot.start_time slot.end_time as slot_bookings %}
           {% user_booking slot_bookings request.user as mine %}
+          {% other_bookings slot_bookings request.user as companions %}
           <div class="boat-cell" style="border-left-color: {{ boat.color }}">
             <div class="boat-name">
               <span>{{ boat.name }}</span>
@@ -366,7 +367,16 @@
 
             {% elif mine %}
               <div class="booking-state">
-                <span class="booked-label">Yours</span>
+                <div>
+                  <span class="booked-label">Yours</span>
+                  {% if companions %}
+                  <div class="booking-names" style="margin-top:0.4rem">
+                    {% for booking in companions %}
+                    <span class="taken-name">{{ booking.athlete.username }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
                 <form method="post" action="/cancel/{{ mine.id }}/">
                   {% csrf_token %}
                   <input type="hidden" name="week_offset" value="{{ week_offset }}">

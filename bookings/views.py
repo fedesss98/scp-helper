@@ -6,7 +6,7 @@ from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
 from django.views.decorators.http import require_POST
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 import hashlib
 from .models import Boat, BookableSlot, Booking
 from .forms import (
@@ -97,6 +97,64 @@ def build_day_sections(week_days):
     ]
 
 
+def get_shared_boat_bookings(*, boat, booking_date, start_time, end_time, exclude_user=None):
+    if not all([boat, booking_date, start_time, end_time]):
+        return Booking.objects.none()
+
+    qs = Booking.objects.filter(
+        boat=boat,
+        date=booking_date,
+        start_time__lt=end_time,
+        end_time__gt=start_time,
+    ).select_related('athlete', 'boat').order_by('start_time', 'athlete__username')
+
+    if exclude_user and exclude_user.is_authenticated:
+        qs = qs.exclude(athlete=exclude_user)
+
+    return qs
+
+
+def add_shared_boat_bookings(bookings, user):
+    for booking in bookings:
+        booking.shared_boat_bookings = list(get_shared_boat_bookings(
+            boat=booking.boat,
+            booking_date=booking.date,
+            start_time=booking.start_time,
+            end_time=booking.end_time,
+            exclude_user=user,
+        ))
+    return bookings
+
+
+def get_selected_slot_companions(form, user):
+    data = form.data if form.is_bound else form.initial
+    if not all(data.get(field) for field in ('boat', 'date', 'start_time', 'end_time')):
+        return Booking.objects.none()
+
+    try:
+        boat = Boat.objects.get(pk=data.get('boat'))
+        booking_date = data.get('date')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+
+        if not isinstance(booking_date, date):
+            booking_date = date.fromisoformat(booking_date)
+        if not isinstance(start_time, time):
+            start_time = time.fromisoformat(start_time)
+        if not isinstance(end_time, time):
+            end_time = time.fromisoformat(end_time)
+    except (Boat.DoesNotExist, TypeError, ValueError):
+        return Booking.objects.none()
+
+    return get_shared_boat_bookings(
+        boat=boat,
+        booking_date=booking_date,
+        start_time=start_time,
+        end_time=end_time,
+        exclude_user=user,
+    )
+
+
 # ─── Calendar ────────────────────────────────────────────────────────────────
 
 @login_required
@@ -154,7 +212,11 @@ def book_slot(request):
         }
         form = BookingForm(initial=initial, user=request.user)
 
-    return render(request, 'bookings/book_slot.html', {'form': form, 'is_admin': is_admin(request.user)})
+    return render(request, 'bookings/book_slot.html', {
+        'form': form,
+        'shared_boat_bookings': get_selected_slot_companions(form, request.user),
+        'is_admin': is_admin(request.user),
+    })
 
 
 @login_required
@@ -182,8 +244,14 @@ def cancel_booking(request, booking_id):
 
 @login_required
 def my_bookings(request):
-    upcoming = request.user.bookings.filter(date__gte=date.today()).order_by('date', 'start_time')
-    past = request.user.bookings.filter(date__lt=date.today()).order_by('-date', 'start_time')[:10]
+    upcoming = add_shared_boat_bookings(
+        list(request.user.bookings.filter(date__gte=date.today()).select_related('boat').order_by('date', 'start_time')),
+        request.user,
+    )
+    past = add_shared_boat_bookings(
+        list(request.user.bookings.filter(date__lt=date.today()).select_related('boat').order_by('-date', 'start_time')[:10]),
+        request.user,
+    )
     return render(request, 'bookings/my_bookings.html', {
         'upcoming': upcoming,
         'past': past,
