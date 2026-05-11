@@ -133,6 +133,70 @@ class LogoutNavigationTests(TestCase):
         self.assertNotContains(response, 'href="/logout/"')
 
 
+class AthleteSharedBookingVisibilityTests(TestCase):
+    def setUp(self):
+        self.alice = User.objects.create_user(username='alice', password='password123')
+        self.bob = User.objects.create_user(username='bob', password='password123')
+        self.booking_date = date.today()
+        self.boat = Boat.objects.create(
+            name='Shared Double',
+            category=Boat.CATEGORY_DOUBLE,
+            seats=2,
+        )
+        BookableSlot.objects.create(
+            day_of_week=self.booking_date.weekday(),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        Booking.objects.create(
+            boat=self.boat,
+            athlete=self.alice,
+            date=self.booking_date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        Booking.objects.create(
+            boat=self.boat,
+            athlete=self.bob,
+            date=self.booking_date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+
+    def test_calendar_shows_other_athletes_when_slot_is_mine(self):
+        self.client.force_login(self.alice)
+
+        response = self.client.get(reverse('calendar'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Yours')
+        self.assertContains(response, 'bob')
+
+    def test_booking_page_shows_existing_people_on_selected_boat(self):
+        Booking.objects.filter(athlete=self.alice).delete()
+        self.client.force_login(self.alice)
+
+        response = self.client.get(reverse('book_slot'), {
+            'boat': self.boat.id,
+            'date': self.booking_date.isoformat(),
+            'start_time': '09:00',
+            'end_time': '10:00',
+        }, secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Already booked on this boat')
+        self.assertContains(response, 'bob')
+
+    def test_my_bookings_shows_other_people_on_same_boat(self):
+        self.client.force_login(self.alice)
+
+        response = self.client.get(reverse('my_bookings'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Same boat')
+        self.assertContains(response, 'bob')
+
+
 class AdminSlotManagementTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(

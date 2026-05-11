@@ -19,3 +19,11 @@ def user_booking(bookings, user):
         if booking.athlete.id == user.id:
             return booking
     return None
+
+
+@register.simple_tag
+def other_bookings(bookings, user):
+    return [
+        booking for booking in bookings
+        if booking.athlete.id != user.id
+    ]

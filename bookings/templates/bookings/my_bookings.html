@@ -13,6 +13,7 @@
         <th>Date</th>
         <th>Time</th>
         <th>Boat</th>
+        <th>Same boat</th>
         <th></th>
       </tr>
     </thead>
@@ -22,6 +23,15 @@
         <td><strong>{{ booking.date|date:"D, d M Y" }}</strong></td>
         <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
         <td>{{ booking.boat.name }}</td>
+        <td>
+          {% if booking.shared_boat_bookings %}
+            {% for shared_booking in booking.shared_boat_bookings %}
+            <span class="badge">{{ shared_booking.athlete.username }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--text-muted)">Only you</span>
+          {% endif %}
+        </td>
         <td>
           <form method="post" action="/cancel/{{ booking.id }}/" style="display:inline">
             {% csrf_token %}
@@ -46,6 +56,7 @@
         <th>Date</th>
         <th>Time</th>
         <th>Boat</th>
+        <th>Same boat</th>
       </tr>
     </thead>
     <tbody>
@@ -54,6 +65,15 @@
         <td>{{ booking.date|date:"D, d M Y" }}</td>
         <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
         <td>{{ booking.boat.name }}</td>
+        <td>
+          {% if booking.shared_boat_bookings %}
+            {% for shared_booking in booking.shared_boat_bookings %}
+            <span class="badge">{{ shared_booking.athlete.username }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--text-muted)">Only you</span>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
