@@ -2,6 +2,7 @@ from datetime import date, time
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.urls import reverse
 
 from .forms import BookingForm, ChangePasswordForm, CreateAthleteForm
 from .models import Boat, BookableSlot, Booking
@@ -117,6 +118,75 @@ class AdminPasswordFormTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('password', form.errors)
+
+
+class AdminSlotManagementTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username='admin',
+            email='',
+            password='password123',
+        )
+        self.athlete = User.objects.create_user(
+            username='athlete',
+            password='password123',
+        )
+        self.slot = BookableSlot.objects.create(
+            day_of_week=BookableSlot.MONDAY,
+            start_time=time(15, 30),
+            end_time=time(17, 0),
+        )
+
+    def test_slot_manager_requires_admin(self):
+        self.client.login(username='athlete', password='password123')
+
+        response = self.client.get(reverse('admin_slots'), secure=True)
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_admin_can_view_slot_manager(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('admin_slots'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bookable Slots')
+        self.assertContains(response, '15:30 - 17:00')
+
+    def test_admin_can_create_slot(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_create_slot'), {
+            'day_of_week': BookableSlot.TUESDAY,
+            'start_time': '07:00',
+            'end_time': '08:30',
+            'is_active': 'on',
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_slots'), fetch_redirect_response=False)
+        self.assertTrue(BookableSlot.objects.filter(
+            day_of_week=BookableSlot.TUESDAY,
+            start_time='07:00',
+            end_time='08:30',
+            is_active=True,
+        ).exists())
+
+    def test_admin_can_toggle_slot_visibility(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_toggle_slot', args=[self.slot.id]), secure=True)
+        self.slot.refresh_from_db()
+
+        self.assertRedirects(response, reverse('admin_slots'), fetch_redirect_response=False)
+        self.assertFalse(self.slot.is_active)
+
+    def test_admin_can_delete_slot(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_delete_slot', args=[self.slot.id]), secure=True)
+
+        self.assertRedirects(response, reverse('admin_slots'), fetch_redirect_response=False)
+        self.assertFalse(BookableSlot.objects.filter(id=self.slot.id).exists())
 
     def test_change_password_rejects_short_passwords(self):
         form = ChangePasswordForm(data={
