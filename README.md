@@ -63,28 +63,46 @@ Use Django's built-in admin panel at `/django-admin/` or edit `setup_initial_dat
 
 ---
 
-## Deploying to Render (free tier)
+## Deploying to Heroku
 
-1. Push this folder to a GitHub repo
-2. Go to https://render.com → New → Web Service
-3. Connect your GitHub repo
-4. Render will auto-detect `render.yaml` and configure the build
-5. After first deploy, open the Render **Shell** and run:
+This repository includes the Heroku deployment files:
+
+- `Procfile` runs database migrations during Heroku release phase and starts Gunicorn.
+- `.python-version` pins Heroku builds to Python 3.13.
+- `.slugignore` keeps local data, notebooks, SQLite files, and collected static output out of the Heroku slug.
+
+1. Push the `production` branch to your Heroku app:
    ```bash
-   python setup_initial_data.py
+   git push heroku production:main
    ```
 
-Set production environment variables before deploying:
-- `SECRET_KEY`
-- `DATABASE_URL`
-- `ALLOWED_HOSTS`
-- `CSRF_TRUSTED_ORIGINS`
-- `ADMIN_PASSWORD`
+2. Set production config vars before deploying:
+   ```bash
+   heroku config:set DEBUG=False
+   heroku config:set SECRET_KEY="$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+   heroku config:set ALLOWED_HOSTS=your-app.herokuapp.com
+   heroku config:set CSRF_TRUSTED_ORIGINS=https://your-app.herokuapp.com
+   heroku config:set ADMIN_PASSWORD=replace-with-a-strong-password
+   ```
 
-> **SQLite note**: Render's free tier has an ephemeral disk — your SQLite data
-> will reset on each deploy. For a persistent club app, either:
-> - Add a Render **Disk** (paid), or
-> - Switch to PostgreSQL (Render provides a free PG instance — just change `DATABASES` in `settings.py`)
+3. Attach PostgreSQL so Heroku provides `DATABASE_URL`:
+   ```bash
+   heroku addons:create heroku-postgresql:essential-0
+   ```
+
+4. After the first deploy, seed boats, bookable slots, and the admin user:
+   ```bash
+   heroku run python setup_initial_data.py
+   ```
+
+For custom domains, add them to both `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`.
+After you confirm every production domain is served only over HTTPS, you can enable HSTS with `SECURE_HSTS_SECONDS`.
+
+> **Database note**: Heroku dynos have an ephemeral filesystem. Use PostgreSQL for persistent production data.
+
+## Deploying to Render (free tier)
+
+`render.yaml` is still included for Render deployments.
 
 ---
 

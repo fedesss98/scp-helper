@@ -46,7 +46,7 @@ for data in boats_data:
     print(f"{'Created' if created else 'Already exists'}: {boat.name}")
 
 # ── Create weekly bookable slots ─────────────────────────────────────────────
-DEFAULT_SLOT_MINUTES = 30
+DEFAULT_SLOT_MINUTES = 90
 
 
 def add_minutes(value, minutes):

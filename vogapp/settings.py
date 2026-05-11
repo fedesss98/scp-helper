@@ -2,12 +2,11 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()  # Load environment variables from .env file
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-SECRET_KEY = os.environ['SECRET_KEY']
 
 def env_bool(name, default=False):
     value = os.environ.get(name)
@@ -23,11 +22,24 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
+def env_int(name, default=0):
+    return int(os.environ.get(name, default))
+
+
 DEBUG = env_bool('DEBUG', False)
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-development-key'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is false.')
 
 ALLOWED_HOSTS = env_list('ALLOWED_HOSTS')
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
+if os.environ.get('DYNO') and '.herokuapp.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.herokuapp.com')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -89,13 +101,21 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if DEBUG:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS')
+if os.environ.get('DYNO') and not CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = ['https://*.herokuapp.com']
 CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)
 SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)
 SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not DEBUG)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_HSTS_SECONDS = env_int('SECURE_HSTS_SECONDS', 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', False)
+SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', False)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
