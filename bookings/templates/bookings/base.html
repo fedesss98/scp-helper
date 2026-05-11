@@ -145,6 +145,10 @@
         color: var(--text);
       }
 
+      .logout-form {
+        display: inline-flex;
+      }
+
       @media (max-width: 760px) {
         .site-nav {
           min-height: 56px;
@@ -439,7 +443,10 @@
           {% if is_admin %}
           <span class="badge badge-admin">Admin</span>
           {% endif %}
-          <a href="/logout/" class="btn btn-ghost btn-sm">Log out</a>
+          <form method="post" action="/logout/" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+          </form>
         </div>
       </div>
     </nav>
