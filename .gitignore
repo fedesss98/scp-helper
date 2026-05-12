@@ -1,3 +1,7 @@
+# Local development folders
+data/
+notebooks/
+
 # Environment and secrets
 .env
 .env.*
