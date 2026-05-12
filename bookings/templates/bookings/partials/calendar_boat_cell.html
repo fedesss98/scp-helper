@@ -16,12 +16,12 @@
       {% endfor %}
     </div>
     {% else %}
-    <div class="booking-names">No bookings</div>
+    <div class="booking-names">Nessuna prenotazione</div>
     {% endif %}
   {% elif mine %}
     <div class="booking-state">
       <div>
-        <span class="booked-label">Yours</span>
+        <span class="booked-label">Tuo</span>
         {% if companions %}
         <div class="booking-names booking-names-spaced">
           {% for booking in companions %}
@@ -34,7 +34,7 @@
         <form method="post" action="/cancel/{{ mine.id }}/">
           {% csrf_token %}
           <input type="hidden" name="week_offset" value="{{ week_offset }}" />
-          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?');">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?');">Cancella</button>
         </form>
       </div>
     </div>
@@ -47,12 +47,12 @@
         {% endfor %}
       </div>
       {% else %}
-      <span class="booking-names">Available</span>
+      <span class="booking-names">Libero</span>
       {% endif %}
       {% if is_admin %}
-      <a href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Assign</a>
+      <a href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Assegna</a>
       {% else %}
-      <a href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Book</a>
+      <a href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}" class="btn btn-primary btn-sm">Prenota</a>
       {% endif %}
     </div>
   {% else %}
@@ -65,18 +65,18 @@
           <form method="post" action="/cancel/{{ booking.id }}/">
             {% csrf_token %}
             <input type="hidden" name="week_offset" value="{{ week_offset }}" />
-            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this booking?');">Remove</button>
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this booking?');">Rimuovi</button>
           </form>
         </div>
         {% endfor %}
-        <span class="booking-names">Full</span>
+        <span class="booking-names">Al completo</span>
       </div>
       {% else %}
       <div class="booking-names">
         {% for booking in slot_bookings %}
         <span class="taken-name">{{ booking.athlete.username }}</span>
         {% endfor %}
-        <span>Full</span>
+        <span>Al completo</span>
       </div>
       {% endif %}
     </div>

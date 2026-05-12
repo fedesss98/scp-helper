@@ -1,24 +1,24 @@
 {% extends "bookings/base.html" %}
 {% load static %}
-{% block title %}All Bookings - Rowing Club{% endblock %}
+{% block title %}Prenotazioni - VogApp{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'bookings/css/admin.css' %}" />
 {% endblock %}
 
 {% block content %}
 {% url 'admin_create_booking' as create_booking_url %}
-{% include "bookings/partials/page_header.html" with heading="All Upcoming Bookings" description="Create, edit, and remove athlete bookings." action_url=create_booking_url action_label="Create Booking" %}
+{% include "bookings/partials/page_header.html" with heading="Prenotazioni" description="Create, edit, and remove athlete bookings." action_url=create_booking_url action_label="Crea una Prenotazione" %}
 
 <div class="card">
   {% if bookings %}
   <table>
     <thead>
       <tr>
-        <th>Athlete</th>
-        <th>Boat</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Booked At</th>
+        <th>Atleta</th>
+        <th>Imbarcazione</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Prenotazione</th>
         <th></th>
       </tr>
     </thead>
@@ -32,12 +32,12 @@
         <td class="muted small-text">{{ booking.created_at|date:"d M H:i" }}</td>
         <td>
           <div class="booking-actions">
-            <a href="{% url 'admin_edit_booking' booking.id %}" class="btn btn-ghost btn-sm">Edit</a>
+            <a href="{% url 'admin_edit_booking' booking.id %}" class="btn btn-ghost btn-sm">Modifica</a>
             <form method="post" action="{% url 'admin_delete_booking' booking.id %}" class="inline-form">
               {% csrf_token %}
               <button type="submit" class="btn btn-danger btn-sm"
-                onclick="return confirm('Delete booking for {{ booking.athlete.username }}?')">
-                Delete
+                onclick="return confirm('Eliminare la prenotazione per {{ booking.athlete.username }}?')">
+                Elimina
               </button>
             </form>
           </div>
@@ -47,7 +47,7 @@
     </tbody>
   </table>
   {% else %}
-  <p class="empty-state">No upcoming bookings.</p>
+  <p class="empty-state">Non ci sono ancora prenotazioni.</p>
   {% endif %}
 </div>
 {% endblock %}

@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-narrow">
-  {% include "bookings/partials/back_link.html" with href="/admin/slots/" label="Back to Slots" %}
+  {% include "bookings/partials/back_link.html" with href="/admin/slots/" label="Torna agli Slot" %}
   <h1>{{ title }}</h1>
 
   <div class="card">
@@ -12,8 +12,8 @@
       {% csrf_token %}
       {% include "bookings/partials/form_fields.html" %}
       <div class="actions-row">
-        <button type="submit" class="btn btn-primary">Save Slot</button>
-        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">Salva Slot</button>
+        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancella</a>
       </div>
     </form>
   </div>

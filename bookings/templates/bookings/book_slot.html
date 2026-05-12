@@ -1,13 +1,13 @@
 {% extends "bookings/base.html" %}
 {% load static %}
-{% block title %}New Booking{% endblock %}
+{% block title %}Nuova Prenotazione{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'bookings/css/booking.css' %}" />
 {% endblock %}
 
 {% block content %}
 <div class="booking-page">
-  <h1>New Booking</h1>
+  <h1>Nuova Prenotazione</h1>
   <div class="card">
     {% include "bookings/partials/form_errors.html" %}
     {% include "bookings/partials/shared_crew.html" %}
@@ -15,8 +15,8 @@
       {% csrf_token %}
       {% include "bookings/partials/form_fields.html" %}
       <div class="actions-row">
-        <button type="submit" class="btn btn-gold">Confirm Booking</button>
-        <a href="{% url 'calendar' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-gold">Conferma Prenotazione</button>
+        <a href="{% url 'calendar' %}" class="btn btn-ghost">Cancella</a>
       </div>
     </form>
   </div>

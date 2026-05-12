@@ -1,19 +1,19 @@
 {% extends "bookings/base.html" %}
-{% block title %}My Bookings - Rowing Club{% endblock %}
+{% block title %}Le Mie Prenotazione - VogApp{% endblock %}
 
 {% block content %}
-<h1>My Bookings</h1>
+<h1>Le mie Prenotazioni</h1>
 
 <div class="card">
-  <h2 class="section-title-primary">Upcoming</h2>
+  <h2 class="section-title-primary">In arrivo</h2>
   {% if upcoming %}
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Boat</th>
-        <th>Same boat</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Imbarcazione</th>
+        <th>Equipaggio</th>
         <th></th>
       </tr>
     </thead>
@@ -22,20 +22,20 @@
     </tbody>
   </table>
   {% else %}
-  <p class="empty-state">No upcoming bookings. <a href="{% url 'calendar' %}">Book a slot</a></p>
+  <p class="empty-state">Nessuna Prenotazione in arrivo. <a href="{% url 'calendar' %}">Prenota uno slot</a></p>
   {% endif %}
 </div>
 
 {% if past %}
 <div class="card">
-  <h2 class="section-title-muted">Past (last 10)</h2>
+  <h2 class="section-title-muted">Ultime 10 Prenotazioni</h2>
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Boat</th>
-        <th>Same boat</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Imbarcazione</th>
+        <th>Equipaggio</th>
       </tr>
     </thead>
     <tbody>

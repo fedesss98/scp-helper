@@ -14,18 +14,18 @@
   </button>
   <div class="nav-menu">
     <div class="nav-links">
-      <a href="{% url 'calendar' %}" class="{% if request.path == '/' or request.path == '/calendar/' %}active{% endif %}">Calendar</a>
-      <a href="{% url 'my_bookings' %}" class="{% if request.path == '/my-bookings/' %}active{% endif %}">My Bookings</a>
+      <a href="{% url 'calendar' %}" class="{% if request.path == '/' or request.path == '/calendar/' %}active{% endif %}">Calendario</a>
+      <a href="{% url 'my_bookings' %}" class="{% if request.path == '/my-bookings/' %}active{% endif %}">Prenotazioni</a>
       {% if is_admin %}
-      <a href="{% url 'admin_users' %}" class="{% if '/admin/users/' in request.path %}active{% endif %}">Athletes</a>
-      <a href="{% url 'admin_slots' %}" class="{% if '/admin/slots/' in request.path %}active{% endif %}">Slots</a>
-      <a href="{% url 'admin_all_bookings' %}" class="{% if '/admin/bookings/' in request.path %}active{% endif %}">All Bookings</a>
+      <a href="{% url 'admin_users' %}" class="{% if '/admin/users/' in request.path %}active{% endif %}">Atleti</a>
+      <a href="{% url 'admin_slots' %}" class="{% if '/admin/slots/' in request.path %}active{% endif %}">Slot</a>
+      <a href="{% url 'admin_all_bookings' %}" class="{% if '/admin/bookings/' in request.path %}active{% endif %}">Tutte le Prenotazioni</a>
       {% endif %}
     </div>
     <div class="nav-user">
       <strong>{{ user.username }}</strong>
       {% if is_admin %}
-      <span class="badge badge-admin">Admin</span>
+      <span class="badge badge-admin">Coach</span>
       {% endif %}
       <form method="post" action="/logout/" class="logout-form">
         {% csrf_token %}

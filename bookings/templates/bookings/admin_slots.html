@@ -1,13 +1,13 @@
 {% extends "bookings/base.html" %}
 {% load static %}
-{% block title %}Bookable Slots - VogApp{% endblock %}
+{% block title %}Slot Prenotabili - VogApp{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'bookings/css/admin.css' %}" />
 {% endblock %}
 
 {% block content %}
 {% url 'admin_create_slot' as create_slot_url %}
-{% include "bookings/partials/page_header.html" with heading="Bookable Slots" description="Only active slots are displayed on the booking calendar." action_url=create_slot_url action_label="Create Slot" %}
+{% include "bookings/partials/page_header.html" with heading="Slot Prenotabili" description="Only active slots are displayed on the booking calendar." action_url=create_slot_url action_label="Crea Slot" %}
 
 <div class="slot-groups">
   {% for group in slot_groups %}
@@ -24,29 +24,29 @@
         <div class="admin-slot-time">
           <strong>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</strong>
           {% if slot.is_active %}
-          <span class="slot-status slot-status-active">Active</span>
+          <span class="slot-status slot-status-active">Attivo</span>
           {% else %}
-          <span class="slot-status slot-status-inactive">Hidden</span>
+          <span class="slot-status slot-status-inactive">Nascosto</span>
           {% endif %}
         </div>
         <div class="slot-actions">
-          <a href="{% url 'admin_edit_slot' slot.id %}" class="btn btn-ghost btn-sm">Edit</a>
+          <a href="{% url 'admin_edit_slot' slot.id %}" class="btn btn-ghost btn-sm">Modifica</a>
           <form method="post" action="{% url 'admin_toggle_slot' slot.id %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost btn-sm">
-              {% if slot.is_active %}Hide{% else %}Show{% endif %}
+              {% if slot.is_active %}Nascondi{% else %}Mostra{% endif %}
             </button>
           </form>
           <form method="post" action="{% url 'admin_delete_slot' slot.id %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this slot?')">Delete</button>
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this slot?')">Elimina</button>
           </form>
         </div>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <div class="empty-day">No slots for this day.</div>
+    <div class="empty-day">Nessuno slot per questo giorno.</div>
     {% endif %}
   </section>
   {% endfor %}
