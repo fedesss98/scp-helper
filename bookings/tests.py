@@ -1,11 +1,14 @@
 from datetime import date, time
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 
 from .forms import AdminBookingForm, BookingForm, ChangePasswordForm, CreateAthleteForm
 from .models import Boat, BookableSlot, Booking
+from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
 
 class BookingCapacityTests(TestCase):
@@ -106,6 +109,142 @@ class BookingCapacityTests(TestCase):
 
     def test_rejects_times_that_are_not_admin_generated_slots(self):
         self.assertFalse(self.form_for(self.alice, '12:00', '13:00').is_valid())
+
+
+@override_settings(
+    BOOKING_NOTIFICATION_EXTRA_RECIPIENTS=['club@example.com', 'Coach@Example.com'],
+    DEFAULT_FROM_EMAIL='bookings@example.com',
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class BookingNotificationTests(TestCase):
+    def test_notify_new_booking_sends_email_to_staff_athlete_and_extra_recipients(self):
+        User.objects.create_user(
+            username='coach',
+            email='coach@example.com',
+            is_staff=True,
+        )
+        User.objects.create_user(
+            username='inactive-coach',
+            email='inactive@example.com',
+            is_staff=True,
+            is_active=False,
+        )
+        athlete = User.objects.create_user(
+            username='alice',
+            email='alice@example.com',
+            first_name='Alice',
+            last_name='Example',
+        )
+        boat = Boat.objects.create(name='Coastal One')
+        booking = Booking.objects.create(
+            athlete=athlete,
+            boat=boat,
+            date=date(2026, 6, 1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+
+        sent = notify_new_booking(booking)
+
+        self.assertTrue(sent)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [
+            'coach@example.com',
+            'alice@example.com',
+            'club@example.com',
+        ])
+        self.assertIn('Booking created: Coastal One on 2026-06-01', mail.outbox[0].subject)
+        self.assertIn('Athlete: Alice Example', mail.outbox[0].body)
+        self.assertIn('Current booking:', mail.outbox[0].body)
+
+    @override_settings(BOOKING_NOTIFICATION_EXTRA_RECIPIENTS=[])
+    def test_notify_new_booking_skips_when_no_recipient_emails_are_available(self):
+        athlete = User.objects.create_user(username='alice')
+        boat = Boat.objects.create(name='Coastal One')
+        booking = Booking.objects.create(
+            athlete=athlete,
+            boat=boat,
+            date=date(2026, 6, 1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+
+        sent = notify_new_booking(booking)
+
+        self.assertFalse(sent)
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(BOOKING_NOTIFICATION_EXTRA_RECIPIENTS=[])
+    def test_notify_updated_booking_includes_previous_and_new_athlete(self):
+        User.objects.create_user(
+            username='coach',
+            email='coach@example.com',
+            is_staff=True,
+        )
+        old_athlete = User.objects.create_user(
+            username='alice',
+            email='alice@example.com',
+        )
+        new_athlete = User.objects.create_user(
+            username='bob',
+            email='bob@example.com',
+        )
+        boat = Boat.objects.create(name='Coastal One')
+        booking = Booking.objects.create(
+            athlete=old_athlete,
+            boat=boat,
+            date=date(2026, 6, 1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        previous_booking = snapshot_booking(booking)
+        booking.athlete = new_athlete
+        booking.start_time = time(10, 0)
+        booking.end_time = time(11, 0)
+        booking.save()
+
+        sent = notify_booking_event(booking, 'updated', previous_booking)
+
+        self.assertTrue(sent)
+        self.assertEqual(mail.outbox[0].to, [
+            'coach@example.com',
+            'bob@example.com',
+            'alice@example.com',
+        ])
+        self.assertIn('Booking updated: Coastal One on 2026-06-01', mail.outbox[0].subject)
+        self.assertIn('Current booking:', mail.outbox[0].body)
+        self.assertIn('Previous booking:', mail.outbox[0].body)
+        self.assertIn('Username: alice', mail.outbox[0].body)
+        self.assertIn('Username: bob', mail.outbox[0].body)
+
+    @override_settings(BOOKING_NOTIFICATION_EXTRA_RECIPIENTS=[])
+    def test_notify_cancelled_booking_uses_cancelled_booking_details(self):
+        User.objects.create_user(
+            username='coach',
+            email='coach@example.com',
+            is_staff=True,
+        )
+        athlete = User.objects.create_user(
+            username='alice',
+            email='alice@example.com',
+        )
+        boat = Boat.objects.create(name='Coastal One')
+        booking = Booking.objects.create(
+            athlete=athlete,
+            boat=boat,
+            date=date(2026, 6, 1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+        )
+        previous_booking = snapshot_booking(booking)
+
+        sent = notify_booking_event(booking, 'cancelled', previous_booking)
+
+        self.assertTrue(sent)
+        self.assertEqual(mail.outbox[0].to, ['coach@example.com', 'alice@example.com'])
+        self.assertIn('Booking cancelled: Coastal One on 2026-06-01', mail.outbox[0].subject)
+        self.assertIn('Cancelled booking:', mail.outbox[0].body)
+        self.assertNotIn('Current booking:', mail.outbox[0].body)
 
 
 class AdminPasswordFormTests(TestCase):

@@ -5,10 +5,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 from django.views.decorators.http import require_POST
 from datetime import date, time, timedelta
 import hashlib
 from .models import Boat, BookableSlot, Booking
+from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 from .forms import (
     AdminBookingForm,
     BookableSlotForm,
@@ -199,7 +201,8 @@ def book_slot(request):
             booking = form.save(commit=False)
             booking.athlete = request.user
             booking.save()
-            messages.success(request, f'Booked {booking.boat.name} on {booking.date} {booking.start_time:%H:%M}–{booking.end_time:%H:%M}!')
+            transaction.on_commit(lambda booking=booking: notify_new_booking(booking))
+            messages.success(request, f'Booked {booking.boat.name} on {booking.date} {booking.start_time:%H:%M}-{booking.end_time:%H:%M}!')
             return redirect('calendar')
         # if invalid, fall through and re-render calendar with the form errors
     else:
@@ -223,6 +226,7 @@ def book_slot(request):
 @require_POST
 def cancel_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    previous_booking = snapshot_booking(booking)
 
     # Only the owner or admin can cancel
     if booking.athlete != request.user and not is_admin(request.user):
@@ -234,6 +238,13 @@ def cancel_booking(request, booking_id):
         return redirect('calendar')
 
     booking.delete()
+    transaction.on_commit(
+        lambda booking=booking, previous_booking=previous_booking: notify_booking_event(
+            booking,
+            'cancelled',
+            previous_booking,
+        )
+    )
     messages.success(request, 'Booking cancelled.')
 
     week_offset = request.POST.get('week_offset', 0)
@@ -422,6 +433,7 @@ def admin_create_booking(request):
         form = AdminBookingForm(request.POST)
         if form.is_valid():
             booking = form.save()
+            transaction.on_commit(lambda booking=booking: notify_new_booking(booking))
             messages.success(
                 request,
                 f'Booking created for {booking.athlete.username}: {booking.boat.name} on '
@@ -449,9 +461,17 @@ def admin_create_booking(request):
 def admin_edit_booking(request, booking_id):
     booking = get_object_or_404(Booking.objects.select_related('athlete', 'boat'), pk=booking_id)
     if request.method == 'POST':
+        previous_booking = snapshot_booking(booking)
         form = AdminBookingForm(request.POST, instance=booking)
         if form.is_valid():
             booking = form.save()
+            transaction.on_commit(
+                lambda booking=booking, previous_booking=previous_booking: notify_booking_event(
+                    booking,
+                    'updated',
+                    previous_booking,
+                )
+            )
             messages.success(
                 request,
                 f'Booking updated for {booking.athlete.username}: {booking.boat.name} on '
@@ -473,7 +493,15 @@ def admin_edit_booking(request, booking_id):
 @require_POST
 def admin_delete_booking(request, booking_id):
     booking = get_object_or_404(Booking.objects.select_related('athlete', 'boat'), pk=booking_id)
+    previous_booking = snapshot_booking(booking)
     label = f'{booking.athlete.username} - {booking.boat.name} on {booking.date}'
     booking.delete()
+    transaction.on_commit(
+        lambda booking=booking, previous_booking=previous_booking: notify_booking_event(
+            booking,
+            'cancelled',
+            previous_booking,
+        )
+    )
     messages.success(request, f'Booking "{label}" deleted.')
     return redirect('admin_all_bookings')

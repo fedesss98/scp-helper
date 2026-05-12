@@ -81,6 +81,16 @@ Set production environment variables before deploying:
 - `CSRF_TRUSTED_ORIGINS`
 - `ADMIN_PASSWORD`
 
+Optional email notification settings:
+- Staff users with an email address are notified automatically
+- The booked athlete is notified automatically when their email address is set
+- `BOOKING_NOTIFICATION_EXTRA_RECIPIENTS`: optional comma-separated extra email addresses, such as a shared club inbox
+- `DEFAULT_FROM_EMAIL`: sender address shown in notification emails
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`: SMTP provider settings
+- `EMAIL_USE_TLS` or `EMAIL_USE_SSL`: enable the security mode required by the SMTP provider
+
+In local development, `DEBUG=True` uses Django's console email backend by default, so notification emails are printed in the terminal instead of being sent.
+
 > **SQLite note**: Render's free tier has an ephemeral disk — your SQLite data
 > will reset on each deploy. For a persistent club app, either:
 > - Add a Render **Disk** (paid), or
