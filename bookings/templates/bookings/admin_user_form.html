@@ -1,38 +1,19 @@
 {% extends "bookings/base.html" %}
-{% block title %}{{ title }} — Rowing Club{% endblock %}
+{% block title %}{{ title }} - Rowing Club{% endblock %}
 
 {% block content %}
-<div style="max-width:480px">
-  <div style="margin-bottom:1.5rem">
-    <a href="/admin/users/" style="color:var(--text-muted);text-decoration:none;font-size:0.9rem">← Back to Athletes</a>
-  </div>
-
+<div class="container-narrow">
+  {% include "bookings/partials/back_link.html" with href="/admin/users/" label="Back to Athletes" %}
   <h1>{{ title }}</h1>
 
   <div class="card">
-    {% if form.non_field_errors %}
-    <div class="form-errors">
-      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-    </div>
-    {% endif %}
-
+    {% include "bookings/partials/form_errors.html" %}
     <form method="post">
       {% csrf_token %}
-      {% for field in form %}
-      <div class="form-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}
-        <p style="color:var(--text-muted);font-size:0.82rem;margin-top:0.3rem">{{ field.help_text }}</p>
-        {% endif %}
-        {% if field.errors %}
-        <p style="color:#ef9a9a;font-size:0.82rem;margin-top:0.3rem">{{ field.errors.0 }}</p>
-        {% endif %}
-      </div>
-      {% endfor %}
-      <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+      {% include "bookings/partials/form_fields.html" %}
+      <div class="actions-row">
         <button type="submit" class="btn btn-gold">Save</button>
-        <a href="/admin/users/" class="btn btn-ghost">Cancel</a>
+        <a href="{% url 'admin_users' %}" class="btn btn-ghost">Cancel</a>
       </div>
     </form>
   </div>

@@ -1,77 +1,20 @@
 {% extends "bookings/base.html" %}
+{% load static %}
 {% block title %}New Booking{% endblock %}
-
 {% block extra_css %}
-<style>
-  .booking-page {
-    max-width: 520px;
-  }
-
-  .shared-crew {
-    margin-bottom: 1.25rem;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-    background: #eff6ff;
-  }
-
-  .shared-crew-title {
-    display: block;
-    margin-bottom: 0.35rem;
-    color: #1e40af;
-    font-size: 0.78rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0;
-  }
-
-  .shared-crew-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  .shared-crew-name {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid #bfdbfe;
-    border-radius: 999px;
-    background: #fff;
-    color: var(--text);
-    padding: 0.18rem 0.55rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'bookings/css/booking.css' %}" />
 {% endblock %}
 
 {% block content %}
 <div class="booking-page">
   <h1>New Booking</h1>
   <div class="card">
-    {% if form.non_field_errors %}
-    <div class="form-errors">{{ form.non_field_errors }}</div>
-    {% endif %}
-    {% if shared_boat_bookings %}
-    <div class="shared-crew">
-      <span class="shared-crew-title">Already booked on this boat</span>
-      <div class="shared-crew-list">
-        {% for booking in shared_boat_bookings %}
-        <span class="shared-crew-name">{{ booking.athlete.username }}</span>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
+    {% include "bookings/partials/form_errors.html" %}
+    {% include "bookings/partials/shared_crew.html" %}
     <form method="post" action="{% url 'book_slot' %}">
       {% csrf_token %}
-      {% for field in form %}
-      <div class="form-group">
-        <label>{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}<p style="color:#ef9a9a;font-size:.82rem">{{ field.errors.0 }}</p>{% endif %}
-      </div>
-      {% endfor %}
-      <div style="display:flex;gap:.75rem;margin-top:.5rem">
+      {% include "bookings/partials/form_fields.html" %}
+      <div class="actions-row">
         <button type="submit" class="btn btn-gold">Confirm Booking</button>
         <a href="{% url 'calendar' %}" class="btn btn-ghost">Cancel</a>
       </div>

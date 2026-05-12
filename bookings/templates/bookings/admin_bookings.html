@@ -1,39 +1,13 @@
 {% extends "bookings/base.html" %}
+{% load static %}
 {% block title %}All Bookings - Rowing Club{% endblock %}
-
 {% block extra_css %}
-<style>
-  .page-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-  }
-
-  .page-head h1 {
-    margin: 0;
-  }
-
-  .booking-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'bookings/css/admin.css' %}" />
 {% endblock %}
 
 {% block content %}
-<div class="page-head">
-  <div>
-    <h1>All Upcoming Bookings</h1>
-    <p style="color:var(--text-muted);margin-top:.35rem">Create, edit, and remove athlete bookings.</p>
-  </div>
-  <a href="{% url 'admin_create_booking' %}" class="btn btn-primary">Create Booking</a>
-</div>
+{% url 'admin_create_booking' as create_booking_url %}
+{% include "bookings/partials/page_header.html" with heading="All Upcoming Bookings" description="Create, edit, and remove athlete bookings." action_url=create_booking_url action_label="Create Booking" %}
 
 <div class="card">
   {% if bookings %}
@@ -55,17 +29,17 @@
         <td>{{ booking.boat.name }}</td>
         <td>{{ booking.date|date:"D, d M Y" }}</td>
         <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
-        <td style="color:var(--text-muted);font-size:0.85rem">{{ booking.created_at|date:"d M H:i" }}</td>
+        <td class="muted small-text">{{ booking.created_at|date:"d M H:i" }}</td>
         <td>
           <div class="booking-actions">
-          <a href="{% url 'admin_edit_booking' booking.id %}" class="btn btn-ghost btn-sm">Edit</a>
-          <form method="post" action="{% url 'admin_delete_booking' booking.id %}" style="display:inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm"
-              onclick="return confirm('Delete booking for {{ booking.athlete.username }}?')">
-              Delete
-            </button>
-          </form>
+            <a href="{% url 'admin_edit_booking' booking.id %}" class="btn btn-ghost btn-sm">Edit</a>
+            <form method="post" action="{% url 'admin_delete_booking' booking.id %}" class="inline-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm"
+                onclick="return confirm('Delete booking for {{ booking.athlete.username }}?')">
+                Delete
+              </button>
+            </form>
           </div>
         </td>
       </tr>
@@ -73,7 +47,7 @@
     </tbody>
   </table>
   {% else %}
-  <p style="color:var(--text-muted)">No upcoming bookings.</p>
+  <p class="empty-state">No upcoming bookings.</p>
   {% endif %}
 </div>
 {% endblock %}

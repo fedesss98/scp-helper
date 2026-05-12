@@ -1,0 +1,7 @@
+{% if bookings %}
+  {% for shared_booking in bookings %}
+  <span class="badge">{{ shared_booking.athlete.username }}</span>
+  {% endfor %}
+{% else %}
+  <span class="muted">Only you</span>
+{% endif %}

@@ -1,0 +1,37 @@
+{% if user.is_authenticated %}
+<nav class="site-nav" data-nav>
+  <a href="{% url 'calendar' %}" class="nav-brand">Vog<span>App</span></a>
+  <button
+    class="nav-toggle"
+    type="button"
+    aria-label="Menu"
+    aria-expanded="false"
+    data-nav-toggle
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <div class="nav-menu">
+    <div class="nav-links">
+      <a href="{% url 'calendar' %}" class="{% if request.path == '/' or request.path == '/calendar/' %}active{% endif %}">Calendar</a>
+      <a href="{% url 'my_bookings' %}" class="{% if request.path == '/my-bookings/' %}active{% endif %}">My Bookings</a>
+      {% if is_admin %}
+      <a href="{% url 'admin_users' %}" class="{% if '/admin/users/' in request.path %}active{% endif %}">Athletes</a>
+      <a href="{% url 'admin_slots' %}" class="{% if '/admin/slots/' in request.path %}active{% endif %}">Slots</a>
+      <a href="{% url 'admin_all_bookings' %}" class="{% if '/admin/bookings/' in request.path %}active{% endif %}">All Bookings</a>
+      {% endif %}
+    </div>
+    <div class="nav-user">
+      <strong>{{ user.username }}</strong>
+      {% if is_admin %}
+      <span class="badge badge-admin">Admin</span>
+      {% endif %}
+      <form method="post" action="/logout/" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+      </form>
+    </div>
+  </div>
+</nav>
+{% endif %}

@@ -1,0 +1,11 @@
+<div class="page-head">
+  <div>
+    <h1>{{ heading }}</h1>
+    {% if description %}
+    <p class="page-description">{{ description }}</p>
+    {% endif %}
+  </div>
+  {% if action_url and action_label %}
+  <a href="{{ action_url }}" class="btn {{ action_class|default:'btn-primary' }}">{{ action_label }}</a>
+  {% endif %}
+</div>
