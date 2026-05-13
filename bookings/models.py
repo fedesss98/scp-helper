@@ -12,8 +12,8 @@ class Athlete(models.Model):
     SEX_OTHER = 'O'
 
     SEX_CHOICES = [
-        (SEX_MALE, 'Maschile'),
-        (SEX_FEMALE, 'Femminile'),
+        (SEX_MALE, 'Maschio'),
+        (SEX_FEMALE, 'Femmina'),
         (SEX_OTHER, 'Altro'),
     ]
 
