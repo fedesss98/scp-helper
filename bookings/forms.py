@@ -1,4 +1,4 @@
-from datetime import date as current_date
+from datetime import date as current_date, time
 
 from django import forms
 from django.contrib.auth.models import User
@@ -7,6 +7,30 @@ from django.db import transaction
 from django.db.models import Q
 
 from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch
+
+
+def build_time_choices(step_minutes=30):
+    choices = [('', '---------')]
+    for total_minutes in range(0, 24 * 60, step_minutes):
+        hour, minute = divmod(total_minutes, 60)
+        value = f'{hour:02d}:{minute:02d}'
+        choices.append((value, value))
+    return choices
+
+
+TIME_CHOICES = build_time_choices()
+
+
+class TwentyFourHourTimeField(forms.TimeField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('input_formats', ['%H:%M'])
+        kwargs.setdefault('widget', forms.Select(choices=TIME_CHOICES))
+        super().__init__(*args, **kwargs)
+
+    def prepare_value(self, value):
+        if isinstance(value, time):
+            return value.strftime('%H:%M')
+        return super().prepare_value(value)
 
 
 class AthleteForm(forms.ModelForm):
@@ -44,6 +68,9 @@ class AthleteForm(forms.ModelForm):
 
 
 class SlotForm(forms.ModelForm):
+    start_time = TwentyFourHourTimeField(label='Ora inizio')
+    end_time = TwentyFourHourTimeField(label='Ora fine')
+
     class Meta:
         model = Slot
         fields = ['date', 'start_time', 'end_time', 'workout', 'is_active']
@@ -56,8 +83,6 @@ class SlotForm(forms.ModelForm):
         }
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
         }
 
     def clean(self):
@@ -70,6 +95,9 @@ class SlotForm(forms.ModelForm):
 
 
 class SlotBatchForm(forms.ModelForm):
+    start_time = TwentyFourHourTimeField(label='Ora inizio')
+    end_time = TwentyFourHourTimeField(label='Ora fine')
+
     class Meta:
         model = SlotBatch
         fields = ['day_of_week', 'start_date', 'end_date', 'start_time', 'end_time', 'workout']
@@ -84,8 +112,6 @@ class SlotBatchForm(forms.ModelForm):
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time', 'step': '1800'}),
         }
 
     def clean(self):

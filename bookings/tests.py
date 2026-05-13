@@ -5,7 +5,7 @@ from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .forms import AthleteForm, BookingForm
+from .forms import AthleteForm, BookingForm, SlotBatchForm, SlotForm
 from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, Workout
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
@@ -63,6 +63,19 @@ class SlotBatchTests(TestCase):
         self.assertEqual(len(created_slots), 4)
         self.assertTrue(Slot.objects.filter(date=date(2026, 6, 3), workout=workout).exists())
         self.assertTrue(all(slot.start_time == time(11, 0) for slot in created_slots))
+
+
+class SlotTimeFormTests(TestCase):
+    def test_slot_forms_use_24_hour_selects_for_times(self):
+        for form in (SlotForm(), SlotBatchForm()):
+            for field_name in ('start_time', 'end_time'):
+                field = form.fields[field_name]
+                rendered_field = form[field_name].as_widget()
+                self.assertEqual(field.widget.__class__.__name__, 'Select')
+                self.assertIn(('13:00', '13:00'), list(field.widget.choices))
+                self.assertNotIn('AM', rendered_field)
+                self.assertNotIn('PM', rendered_field)
+                self.assertNotIn('type="time"', rendered_field)
 
 
 class AthleteFormTests(TestCase):
