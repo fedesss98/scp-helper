@@ -246,6 +246,67 @@ class BookingViewsTests(DomainFactoryMixin, TestCase):
         self.assertContains(response, 'Bob Example')
 
 
+class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
+        self.alice = self.create_athlete('Alice Example')
+        self.bob = self.create_athlete('Bob Example')
+        self.boat = Boat.objects.create(name='Double', rower_seats=2)
+        self.slot = self.create_slot(date=date.today())
+
+    def test_admin_create_booking_starts_with_slot_and_boat_only(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('admin_create_booking'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Scegli Slot e Imbarcazione')
+        self.assertContains(response, 'Slot')
+        self.assertContains(response, 'Imbarcazione')
+        self.assertNotContains(response, 'Rower 1')
+
+    def test_admin_create_booking_valid_selection_loads_seat_form(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            f'{reverse("admin_create_booking")}?slot={self.slot.id}&boat={self.boat.id}',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Completa Equipaggio')
+        self.assertContains(response, 'Rower 1')
+        self.assertContains(response, 'Rower 2')
+
+    def test_admin_create_booking_rejects_already_booked_boat_before_seat_form(self):
+        self.create_booking(boat=self.boat, slot=self.slot, rowers=[self.alice, self.bob])
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            f'{reverse("admin_create_booking")}?slot={self.slot.id}&boat={self.boat.id}',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Double is already booked in this slot.')
+        self.assertNotContains(response, 'Rower 1')
+
+    def test_admin_create_booking_final_phase_creates_booking(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_create_booking'), {
+            'phase': 'crew',
+            'slot': self.slot.id,
+            'boat': self.boat.id,
+            'rower_1': self.alice.id,
+            'rower_2': self.bob.id,
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
+        booking = Booking.objects.get(slot=self.slot, boat=self.boat)
+        self.assertEqual(list(booking.crew.order_by('last_name')), [self.alice, self.bob])
+
+
 class AdminSlotManagementTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(username='admin', email='', password='password123')

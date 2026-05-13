@@ -105,6 +105,37 @@ def active_athletes():
     return Athlete.objects.filter(is_active=True).order_by('last_name', 'first_name')
 
 
+class BookingSelectionForm(forms.Form):
+    slot = forms.ModelChoiceField(
+        queryset=Slot.objects.none(),
+        label='Slot',
+    )
+    boat = forms.ModelChoiceField(
+        queryset=Boat.objects.none(),
+        label='Imbarcazione',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['slot'].queryset = Slot.objects.filter(is_active=True).order_by('date', 'start_time')
+        self.fields['boat'].queryset = Boat.objects.filter(is_active=True).order_by('name')
+
+    def clean(self):
+        cleaned = super().clean()
+        slot = cleaned.get('slot')
+        boat = cleaned.get('boat')
+        if not slot or not boat:
+            return cleaned
+
+        if slot.date < current_date.today():
+            raise ValidationError('Cannot book a past slot.')
+
+        if Booking.objects.filter(slot=slot, boat=boat).exists():
+            raise ValidationError(f'{boat.name} is already booked in this slot.')
+
+        return cleaned
+
+
 class BookingForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
