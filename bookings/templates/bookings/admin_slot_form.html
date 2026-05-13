@@ -6,6 +6,38 @@
   {% include "bookings/partials/back_link.html" with href="/admin/slots/" label="Torna agli Slot" %}
   <h1>{{ title }}</h1>
 
+  {% if single_form and batch_form %}
+  <div class="card">
+    <h2 class="section-title-primary">Slot singolo</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="create_mode" value="single" />
+      {% with form=single_form %}
+      {% include "bookings/partials/form_errors.html" %}
+      {% include "bookings/partials/form_fields.html" %}
+      {% endwith %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary">Crea Slot</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title-primary">Crea in batch</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="create_mode" value="batch" />
+      {% with form=batch_form %}
+      {% include "bookings/partials/form_errors.html" %}
+      {% include "bookings/partials/form_fields.html" %}
+      {% endwith %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-gold">Crea Ricorrenze</button>
+        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancella</a>
+      </div>
+    </form>
+  </div>
+  {% else %}
   <div class="card">
     {% include "bookings/partials/form_errors.html" %}
     <form method="post">
@@ -17,5 +49,6 @@
       </div>
     </form>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

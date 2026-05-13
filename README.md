@@ -1,13 +1,15 @@
-# 🚣 Rowing Club Booking App
+# Rowing Club Booking App
 
-A simple Django web app for athletes to book coastal rowing boat sessions.
+A simple Django web app for managing rowing club slots, workouts, boats, athletes, and complete-crew bookings.
 
 ## Features
 
-- **Athletes** can browse a weekly calendar and book/cancel time slots
-- **Admin** can create athletes, change passwords, and manage all bookings
-- **Multiple boats** side-by-side in a single calendar view
-- No self-registration — admin controls all accounts
+- Athletes can browse a weekly calendar and book/cancel complete boat crews.
+- Admin users can create users, link users to athlete profiles, create slots in batch, and manage bookings.
+- Slots are concrete date/time intervals, optionally linked to a reusable workout.
+- Boats have rower seats and can optionally require a cox.
+- Bookings reserve one boat for one slot and must include the full crew.
+- No self-registration: admin users control accounts.
 
 ---
 
@@ -30,12 +32,19 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-### 4. Create boats + admin user
+If you are upgrading from the previous prototype schema, recreate the local
+database first because the booking models were intentionally redesigned
+destructively.
+
+### 4. Create starter data + admin user
 ```bash
 python setup_initial_data.py
 ```
+
 This creates:
+- Starter workouts from `setup_initial_data.py`
 - Starter boats from `setup_initial_data.py`
+- Concrete slots for the current month using batch generation
 - Admin user `admin`
 
 Set `ADMIN_PASSWORD` before running the script to choose the initial password.
@@ -51,25 +60,41 @@ Open http://localhost:8000 and log in as `admin`.
 
 ---
 
+## Domain Model
+
+- `Athlete`: sports identity with full name, optional date of birth, sex, active flag, and optional linked Django user.
+- `User`: login identity and permissions. Creating a user can also create/link an athlete profile.
+- `Workout`: reusable text label/description such as `S&C` or `4x3000 rest 10'`.
+- `Slot`: concrete date/time interval, optionally linked to one workout.
+- `SlotBatch`: helper record used to generate concrete slots for repeated weekdays.
+- `Boat`: boat name, rower seat count, optional cox requirement, color, and active flag.
+- `Booking`: one boat in one slot with a complete crew.
+- `BookingCrewMember`: through model for booking crew, preserving rower seats and cox role.
+
 ## Admin Tasks
 
-### Create an athlete
-1. Log in as admin
-2. Go to **Athletes** in the nav
-3. Click **+ Add Athlete**, fill in username and password
+### Create a user and athlete link
+1. Log in as admin.
+2. Go to **Utenti** in the nav.
+3. Click **+ Aggiungi Utente**.
+4. Either link an existing athlete or leave the athlete field empty to create one from the user's name.
+5. Use the Staff checkbox for admin privileges.
 
-### Change boat names/colors
-Use Django's built-in admin panel at `/django-admin/` or edit `setup_initial_data.py`.
+### Create slots
+Use **Slot** in the app nav. You can create a single concrete slot or use the batch form to generate every selected weekday over a date range.
+
+### Manage workouts, boats, and standalone athletes
+Use Django's built-in admin panel at `/django-admin/`.
 
 ---
 
-## Deploying to Render (free tier)
+## Deploying to Render
 
-1. Push this folder to a GitHub repo
-2. Go to https://render.com → New → Web Service
-3. Connect your GitHub repo
-4. Render will auto-detect `render.yaml` and configure the build
-5. After first deploy, open the Render **Shell** and run:
+1. Push this folder to a GitHub repo.
+2. Go to https://render.com and create a Web Service.
+3. Connect your GitHub repo.
+4. Render will auto-detect `render.yaml` and configure the build.
+5. After first deploy, open the Render shell and run:
    ```bash
    python setup_initial_data.py
    ```
@@ -82,41 +107,22 @@ Set production environment variables before deploying:
 - `ADMIN_PASSWORD`
 
 Optional email notification settings:
-- Staff users with an email address are notified automatically
-- The booked athlete is notified automatically when their email address is set
-- `BOOKING_NOTIFICATION_EXTRA_RECIPIENTS`: optional comma-separated extra email addresses, such as a shared club inbox
-- `DEFAULT_FROM_EMAIL`: sender address shown in notification emails
-- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`: SMTP provider settings
-- `EMAIL_USE_TLS` or `EMAIL_USE_SSL`: enable the security mode required by the SMTP provider
+- Staff users with an email address are notified automatically.
+- Crew athletes are notified when they have a linked user with an email address.
+- `BOOKING_NOTIFICATION_EXTRA_RECIPIENTS`: optional comma-separated extra email addresses.
+- `DEFAULT_FROM_EMAIL`: sender address shown in notification emails.
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`: SMTP provider settings.
+- `EMAIL_USE_TLS` or `EMAIL_USE_SSL`: enable the security mode required by the SMTP provider.
 
-In local development, `DEBUG=True` uses Django's console email backend by default, so notification emails are printed in the terminal instead of being sent.
+In local development, `DEBUG=True` uses Django's console email backend by default.
 
-> **SQLite note**: Render's free tier has an ephemeral disk — your SQLite data
-> will reset on each deploy. For a persistent club app, either:
-> - Add a Render **Disk** (paid), or
-> - Switch to PostgreSQL (Render provides a free PG instance — just change `DATABASES` in `settings.py`)
+> SQLite note: Render's free tier has an ephemeral disk, so SQLite data resets on deploy.
+> For a persistent club app, use a Render Disk or switch to PostgreSQL.
 
 ---
 
-## Customising Calendar Slots
+## Tests
 
-Bookable slots are managed in Django admin at `/django-admin/bookings/bookableslot/`.
-The calendar only shows active weekly slots. `setup_initial_data.py` seeds this schedule:
-
-- Monday: 15:30
-- Tuesday: 07:00, 14:00, 15:30
-- Wednesday: 15:30
-- Thursday: 07:00, 14:00, 15:30
-- Friday: 15:30
-- Saturday: 08:00, 10:30
-- Sunday: 08:30
-
-Seeded slots are 30 minutes long by default; edit their end time in Django admin if sessions should last longer.
-
-## Boat Categories and Seats
-
-Boats have a category such as `1xC`, `2xC`, `2x`, `4x`, or `4+`, plus a seat count. Multiple athletes can book the same boat at overlapping times until all seats are full.
-
-## Adding More Boats
-
-Just add them via `/django-admin/bookings/boat/add/` or edit `setup_initial_data.py`.
+```bash
+python manage.py test
+```

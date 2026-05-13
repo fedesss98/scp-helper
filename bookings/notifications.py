@@ -34,57 +34,58 @@ def unique_emails(emails):
     return recipients
 
 
+def booking_crew_emails(booking):
+    return [
+        athlete.user.email
+        for athlete in booking.crew.select_related('user')
+        if athlete.user and athlete.user.email
+    ]
+
+
 def get_booking_notification_recipients(booking, previous_booking=None):
     staff_emails = User.objects.filter(
         is_staff=True,
         is_active=True,
     ).exclude(email='').values_list('email', flat=True)
 
-    athlete_emails = [booking.athlete.email]
-    if previous_booking:
-        athlete_emails.append(previous_booking.get('athlete_email'))
-
+    previous_emails = previous_booking.get('crew_emails', []) if previous_booking else []
     extra_emails = getattr(settings, 'BOOKING_NOTIFICATION_EXTRA_RECIPIENTS', [])
-    return unique_emails([*staff_emails, *athlete_emails, *extra_emails])
+    return unique_emails([*staff_emails, *booking_crew_emails(booking), *previous_emails, *extra_emails])
 
 
 def get_booking_details_lines(booking):
-    athlete_name = booking.athlete.get_full_name() or booking.athlete.username
     return [
-        f'Athlete: {athlete_name}',
-        f'Username: {booking.athlete.username}',
         f'Boat: {booking.boat.name}',
-        f'Date: {booking.date:%Y-%m-%d}',
-        f'Time: {booking.start_time:%H:%M}-{booking.end_time:%H:%M}',
+        f'Slot: {booking.slot.date:%Y-%m-%d} {booking.slot.start_time:%H:%M}-{booking.slot.end_time:%H:%M}',
+        f'Workout: {booking.slot.workout.name if booking.slot.workout else "-"}',
+        f'Crew: {booking.crew_names()}',
     ]
 
 
 def snapshot_booking(booking):
-    athlete_name = booking.athlete.get_full_name() or booking.athlete.username
     return {
-        'athlete': athlete_name,
-        'athlete_username': booking.athlete.username,
-        'athlete_email': booking.athlete.email,
         'boat': booking.boat.name,
-        'date': booking.date,
-        'start_time': booking.start_time,
-        'end_time': booking.end_time,
+        'slot_date': booking.slot.date,
+        'start_time': booking.slot.start_time,
+        'end_time': booking.slot.end_time,
+        'workout': booking.slot.workout.name if booking.slot.workout else '',
+        'crew': booking.crew_names(),
+        'crew_emails': booking_crew_emails(booking),
     }
 
 
 def get_snapshot_details_lines(snapshot):
     return [
-        f'Athlete: {snapshot["athlete"]}',
-        f'Username: {snapshot["athlete_username"]}',
         f'Boat: {snapshot["boat"]}',
-        f'Date: {snapshot["date"]:%Y-%m-%d}',
-        f'Time: {snapshot["start_time"]:%H:%M}-{snapshot["end_time"]:%H:%M}',
+        f'Slot: {snapshot["slot_date"]:%Y-%m-%d} {snapshot["start_time"]:%H:%M}-{snapshot["end_time"]:%H:%M}',
+        f'Workout: {snapshot["workout"] or "-"}',
+        f'Crew: {snapshot["crew"]}',
     ]
 
 
 def build_booking_event_email(booking, event_type, previous_booking=None):
     event_label = EVENT_LABELS[event_type]
-    subject = f'Booking {event_label}: {booking.boat.name} on {booking.date:%Y-%m-%d}'
+    subject = f'Booking {event_label}: {booking.boat.name} on {booking.slot.date:%Y-%m-%d}'
     if event_type == 'cancelled' and previous_booking:
         return subject, '\n'.join([
             'A booking has been cancelled.',

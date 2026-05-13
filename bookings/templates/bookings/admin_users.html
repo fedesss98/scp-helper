@@ -1,13 +1,13 @@
 {% extends "bookings/base.html" %}
 {% load static %}
-{% block title %}Atleti - VogApp{% endblock %}
+{% block title %}Utenti - VogApp{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'bookings/css/admin.css' %}" />
 {% endblock %}
 
 {% block content %}
 {% url 'admin_create_user' as create_user_url %}
-{% include "bookings/partials/page_header.html" with heading="Atleti" action_url=create_user_url action_label="+ Aggiungi Atleta" action_class="btn-gold" %}
+{% include "bookings/partials/page_header.html" with heading="Utenti" action_url=create_user_url action_label="+ Aggiungi Utente" action_class="btn-gold" %}
 
 <div class="card">
   {% if athletes %}
@@ -18,7 +18,7 @@
         <th>Nome Completo</th>
         <th>Email</th>
         <th>Ruolo</th>
-        <th>Prenotazioni</th>
+        <th>Atleta collegato</th>
         <th>Azioni</th>
       </tr>
     </thead>
@@ -32,17 +32,17 @@
           {% if athlete.is_staff %}
           <span class="badge badge-admin">Admin</span>
           {% else %}
-          <span class="muted small-text">Atleta</span>
+          <span class="muted small-text">Utente</span>
           {% endif %}
         </td>
-        <td class="muted">{{ athlete.bookings.count }}</td>
+        <td class="muted">{{ athlete.athlete_profile.full_name|default:"-" }}</td>
         <td>
           <div class="admin-actions">
             <a href="/admin/users/{{ athlete.id }}/password/" class="btn btn-ghost btn-sm">Cambia Password</a>
             <form method="post" action="/admin/users/{{ athlete.id }}/delete/" class="inline-form">
               {% csrf_token %}
               <button type="submit" class="btn btn-danger btn-sm"
-                onclick="return confirm('Eliminare {{ athlete.username }}? Questa azione rimuoverà anche ogni sua Prenotazione.')">
+                onclick="return confirm('Eliminare {{ athlete.username }}?')">
                 Elimina
               </button>
             </form>
@@ -53,7 +53,7 @@
     </tbody>
   </table>
   {% else %}
-  <p class="empty-state">Non ci sono atleti ancora. <a href="{% url 'admin_create_user' %}">Crea il tuo primo atleta!</a></p>
+  <p class="empty-state">Non ci sono utenti ancora. <a href="{% url 'admin_create_user' %}">Crea il tuo primo utente!</a></p>
   {% endif %}
 </div>
 {% endblock %}

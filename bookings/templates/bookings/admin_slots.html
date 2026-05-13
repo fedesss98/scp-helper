@@ -7,13 +7,13 @@
 
 {% block content %}
 {% url 'admin_create_slot' as create_slot_url %}
-{% include "bookings/partials/page_header.html" with heading="Slot Prenotabili" description="Only active slots are displayed on the booking calendar." action_url=create_slot_url action_label="Crea Slot" %}
+{% include "bookings/partials/page_header.html" with heading="Slot Prenotabili" description="Gli slot sono intervalli concreti di data e ora." action_url=create_slot_url action_label="Crea Slot" %}
 
 <div class="slot-groups">
   {% for group in slot_groups %}
   <section class="slot-group">
     <header class="slot-group-head">
-      <h2>{{ group.label }}</h2>
+      <h2>{{ group.label|date:"D, d M Y" }}</h2>
       <span class="slot-count">{{ group.slots|length }} slot{{ group.slots|length|pluralize }}</span>
     </header>
 
@@ -23,6 +23,9 @@
       <div class="slot-item">
         <div class="admin-slot-time">
           <strong>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</strong>
+          {% if slot.workout %}
+          <span class="muted">{{ slot.workout.name }}</span>
+          {% endif %}
           {% if slot.is_active %}
           <span class="slot-status slot-status-active">Attivo</span>
           {% else %}

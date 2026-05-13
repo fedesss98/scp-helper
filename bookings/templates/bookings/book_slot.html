@@ -10,7 +10,6 @@
   <h1>Nuova Prenotazione</h1>
   <div class="card">
     {% include "bookings/partials/form_errors.html" %}
-    {% include "bookings/partials/shared_crew.html" %}
     <form method="post" action="{% url 'book_slot' %}">
       {% csrf_token %}
       {% include "bookings/partials/form_fields.html" %}

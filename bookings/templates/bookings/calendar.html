@@ -38,6 +38,9 @@
         <div class="slot-time">
           <strong>{{ slot.start_time|time:"H:i" }}</strong>
           <span>fino a {{ slot.end_time|time:"H:i" }}</span>
+          {% if slot.workout %}
+          <span>{{ slot.workout.name }}</span>
+          {% endif %}
         </div>
         <div class="boat-grid">
           {% for boat in boats %}
