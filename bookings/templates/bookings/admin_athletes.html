@@ -1,0 +1,67 @@
+{% extends "bookings/base.html" %}
+{% load static %}
+{% block title %}Atleti - VogApp{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'bookings/css/admin.css' %}" />
+{% endblock %}
+
+{% block content %}
+{% url 'admin_create_athlete' as create_athlete_url %}
+{% include "bookings/partials/page_header.html" with heading="Atleti" action_url=create_athlete_url action_label="+ Aggiungi Atleta" action_class="btn-gold" %}
+
+<div class="card">
+  {% if athletes %}
+  <table>
+    <thead>
+      <tr>
+        <th>Cognome</th>
+        <th>Nome</th>
+        <th>Data di nascita</th>
+        <th>Sesso</th>
+        <th>Stato</th>
+        <th>Utente collegato</th>
+        <th>Azioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for athlete in athletes %}
+      <tr>
+        <td><strong>{{ athlete.last_name }}</strong></td>
+        <td>{{ athlete.first_name }}</td>
+        <td>{{ athlete.date_of_birth|date:"d/m/Y"|default:"-" }}</td>
+        <td>{{ athlete.get_sex_display|default:"-" }}</td>
+        <td>
+          {% if athlete.is_active %}
+          <span class="badge badge-admin">Attivo</span>
+          {% else %}
+          <span class="muted small-text">Non attivo</span>
+          {% endif %}
+        </td>
+        <td class="muted">
+          {% if athlete.user %}
+          {{ athlete.user.get_full_name|default:athlete.user.username }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          <div class="admin-actions">
+            <a href="{% url 'admin_edit_athlete' athlete.id %}" class="btn btn-ghost btn-sm">Modifica</a>
+            <form method="post" action="{% url 'admin_delete_athlete' athlete.id %}" class="inline-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm"
+                onclick="return confirm('Eliminare {{ athlete.full_name }}?')">
+                Elimina
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">Non ci sono atleti ancora. <a href="{% url 'admin_create_athlete' %}">Crea il primo atleta.</a></p>
+  {% endif %}
+</div>
+{% endblock %}

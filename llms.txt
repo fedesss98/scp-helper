@@ -7,8 +7,8 @@
 
 This is a small Django 4.2 web app for a rowing club. Users log in, view a
 weekly calendar of concrete rowing slots, and create/cancel complete-crew boat
-bookings. Staff/admin users manage users, athlete links, slots, boats, workouts,
-and bookings.
+bookings. Staff/admin users manage athletes, slots, boats, workouts, and
+bookings. Login users are managed from Django's built-in admin.
 
 The Django project package is `vogapp`; the main app is `bookings`.
 
@@ -28,12 +28,12 @@ The Django project package is `vogapp`; the main app is `bookings`.
   - `Booking`: one boat reserved for one slot.
   - `BookingCrewMember`: through model for rower seats and cox role.
 - `bookings/forms.py`: main business validation for complete crews and no double-booking.
-- `bookings/views.py`: calendar, booking/cancel flow, admin user/slot/booking screens,
+- `bookings/views.py`: calendar, booking/cancel flow, admin athlete/slot/booking screens,
   and custom throttled login.
 - `bookings/urls.py`: route names and URL structure.
 - `bookings/notifications.py`: recipient collection and email body generation for
   booking lifecycle events.
-- `bookings/tests.py`: executable specification for slot batches, user-athlete linking,
+- `bookings/tests.py`: executable specification for slot batches, athlete management,
   complete crew validation, notifications, permissions, and rendered booking visibility.
 - `setup_initial_data.py`: seeds workouts, boats, current-month slots, and the first admin user.
 - `render.yaml`: Render deployment config.
@@ -60,8 +60,8 @@ schema history:
 - Authentication uses Django's built-in `User`.
 - `Athlete` is the rowing/sports person model and may exist without a linked user.
 - `Athlete.user` is an optional one-to-one link to `User`.
-- Creating a user through the app can link an existing athlete or create one from
-  the user's full name.
+- App-level admin screens create and edit athletes. Django users are created only
+  from `/django-admin/` and can optionally be linked to athletes.
 - Staff/admin is defined by `user.is_staff or user.is_superuser`.
 - Main user-facing pages require login.
 - App-level admin pages are protected by `user_passes_test`.
@@ -75,7 +75,7 @@ schema history:
 - `/book/`: create a complete-crew booking.
 - `/cancel/<booking_id>/`: cancel a booking by POST.
 - `/my-bookings/`: bookings for the current user's linked athlete.
-- `/admin/users/`: app-level user and user-athlete-link management.
+- `/admin/athletes/`: app-level athlete management.
 - `/admin/slots/`: app-level concrete slot and batch slot creation.
 - `/admin/bookings/`: app-level booking management.
 

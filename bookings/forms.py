@@ -4,95 +4,43 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 
 from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch
 
 
-PASSWORD_MIN_LENGTH = 8
-
-
-class CreateUserForm(forms.ModelForm):
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        label='Password',
-        min_length=PASSWORD_MIN_LENGTH,
-        help_text=f'At least {PASSWORD_MIN_LENGTH} characters.',
-    )
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
-    is_staff = forms.BooleanField(required=False, label='Staff')
-    athlete = forms.ModelChoiceField(
-        queryset=Athlete.objects.filter(user__isnull=True, is_active=True),
+class AthleteForm(forms.ModelForm):
+    user = forms.ModelChoiceField(
+        queryset=User.objects.none(),
         required=False,
-        label='Existing athlete',
-        help_text='Leave empty to create and link a new athlete from the user name.',
+        label='Utente collegato (opzionale)',
+        help_text='Gli utenti si creano dal pannello admin Django; qui puoi solo collegarne uno esistente.',
     )
-    date_of_birth = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        label='Date of birth',
-    )
-    sex = forms.ChoiceField(required=False, choices=[('', '---------'), *Athlete.SEX_CHOICES], label='Sex')
 
     class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'is_staff']
+        model = Athlete
+        fields = ['first_name', 'last_name', 'date_of_birth', 'sex', 'is_active', 'user']
         labels = {
-            'username': 'Username',
-            'first_name': 'First Name',
-            'last_name': 'Last Name',
-            'email': 'Email (optional)',
+            'first_name': 'Nome',
+            'last_name': 'Cognome',
+            'date_of_birth': 'Data di nascita',
+            'sex': 'Sesso',
+            'is_active': 'Atleta attivo',
+        }
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        pw = cleaned_data.get('password')
-        cpw = cleaned_data.get('confirm_password')
-        if pw and cpw and pw != cpw:
-            raise forms.ValidationError('Passwords do not match.')
-        if not cleaned_data.get('athlete') and not (
-            cleaned_data.get('first_name') or cleaned_data.get('last_name')
-        ):
-            raise forms.ValidationError('Provide a name or link an existing athlete.')
-        return cleaned_data
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
-        user.is_staff = self.cleaned_data.get('is_staff', False)
-        if commit:
-            with transaction.atomic():
-                user.save()
-                athlete = self.cleaned_data.get('athlete')
-                if athlete:
-                    athlete.user = user
-                    athlete.save(update_fields=['user'])
-                else:
-                    Athlete.objects.create(
-                        user=user,
-                        first_name=user.first_name or user.username,
-                        last_name=user.last_name,
-                        date_of_birth=self.cleaned_data.get('date_of_birth'),
-                        sex=self.cleaned_data.get('sex') or '',
-                    )
-        return user
-
-
-class ChangePasswordForm(forms.Form):
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        label='New Password',
-        min_length=PASSWORD_MIN_LENGTH,
-        help_text=f'At least {PASSWORD_MIN_LENGTH} characters.',
-    )
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label='Confirm Password')
-
-    def clean(self):
-        cleaned_data = super().clean()
-        pw = cleaned_data.get('password')
-        cpw = cleaned_data.get('confirm_password')
-        if pw and cpw and pw != cpw:
-            raise forms.ValidationError('Passwords do not match.')
-        return cleaned_data
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user_filter = Q(is_superuser=False, athlete_profile__isnull=True)
+        if self.instance.pk and self.instance.user_id:
+            user_filter |= Q(pk=self.instance.user_id)
+        self.fields['user'].queryset = User.objects.filter(user_filter).order_by(
+            'last_name',
+            'first_name',
+            'username',
+        )
 
 
 class SlotForm(forms.ModelForm):

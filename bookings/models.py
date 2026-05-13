@@ -50,10 +50,10 @@ class Athlete(models.Model):
             age -= 1
         if age < 14:
             return 'U14'
-        if age < 16:
-            return 'U16'
-        if age < 18:
-            return 'U18'
+        if age < 17:
+            return 'U17'
+        if age < 19:
+            return 'U19'
         if age < 23:
             return 'U23'
         if age >= 27:
