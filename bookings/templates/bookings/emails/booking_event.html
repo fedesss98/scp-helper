@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      /* Compact email styles - keep inline-safe */
+      body { margin:0; padding:0; background:#f4f6f8; color:#22303b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+      .email-wrapper { background:#f4f6f8; padding:28px 12px; width:100%; }
+      .email-card { max-width:680px; background:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 2px 6px rgba(34,48,59,0.08); }
+      .email-header { background:linear-gradient(90deg,#174059 0%,#1b5a73 100%); color:#ffffff; padding:22px 28px; }
+      .brand { font-size:12px; text-transform:uppercase; letter-spacing:1px; opacity:0.9; }
+      .email-title { margin:6px 0 0; font-size:22px; font-weight:600; }
+      .email-body { padding:22px 28px; font-size:15px; line-height:1.6; }
+      .email-btn { display:inline-block; background:#1b6b9b; color:#ffffff; text-decoration:none; padding:10px 16px; border-radius:6px; font-weight:600; }
+      .email-footer { background:#f7fafc; padding:18px 28px; font-size:13px; color:#627380; }
+      .muted { color:#9aa8b3; font-size:12px; }
+      @media screen and (max-width:480px){ .email-title{font-size:18px;} .email-body{padding:16px;} .email-header{padding:16px;} }
+    </style>
+  </head>
+  <body>
+    <table role="presentation" class="email-wrapper" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center">
+          <table role="presentation" class="email-card" cellspacing="0" cellpadding="0">
+            <!-- Header -->
+            <tr>
+              <td class="email-header">
+                <div class="brand">VogApp — Notifiche</div>
+                <h1 class="email-title">Prenotazione {{ event_label }}</h1>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td class="email-body">
+                {% if cancelled_booking %}
+                  <p style="margin:0 0 16px;">La seguente prenotazione è stata <strong>annullata</strong>:</p>
+                  {% include "bookings/emails/partials/booking_details.html" with title="Prenotazione annullata" details=cancelled_booking only %}
+                {% else %}
+                  <p style="margin:0 0 16px;">È stata <strong>{{ event_label }}</strong> una prenotazione. Di seguito i dettagli:</p>
+                  {% include "bookings/emails/partials/booking_details.html" with title="Dettagli prenotazione" details=booking only %}
+                  {% if previous_booking %}
+                    <div style="height:18px; line-height:18px;">&nbsp;</div>
+                    {% include "bookings/emails/partials/booking_details.html" with title="Prenotazione precedente" details=previous_booking only %}
+                  {% endif %}
+                {% endif %}
+
+                <!-- Action -->
+                <div style="margin-top:18px; text-align:left;">
+                  <a href="{{ site_url|default:'#' }}" class="email-btn">Vedi prenotazione</a>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td class="email-footer">
+                <div style="margin-bottom:6px;">Ricevi questa email perché sei iscritto alle notifiche del club.</div>
+                <div>Per assistenza contatta l'amministrazione: <a href="mailto:{{ DEFAULT_FROM_EMAIL|default:'' }}" style="color:#1b6b9b; text-decoration:none;">{{ DEFAULT_FROM_EMAIL|default:'' }}</a></div>
+                <div style="margin-top:8px;" class="muted">&copy; {% now "Y" %} VogApp</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

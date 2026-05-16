@@ -1,0 +1,19 @@
+<h2 style="margin:0 0 12px; font-size:18px; line-height:1.3; color:#17324d;">{{ title }}</h2>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #e8e1d2;">
+  <tr>
+    <th align="left" style="width:34%; padding:12px; background:#fbfaf7; border-bottom:1px solid #e8e1d2; color:#56616f; font-size:14px;">Barca</th>
+    <td style="padding:12px; border-bottom:1px solid #e8e1d2; font-size:14px;">{{ details.boat }}</td>
+  </tr>
+  <tr>
+    <th align="left" style="width:34%; padding:12px; background:#fbfaf7; border-bottom:1px solid #e8e1d2; color:#56616f; font-size:14px;">Slot</th>
+    <td style="padding:12px; border-bottom:1px solid #e8e1d2; font-size:14px;">{{ details.slot_date|date:"Y-m-d" }} {{ details.start_time|time:"H:i" }}-{{ details.end_time|time:"H:i" }}</td>
+  </tr>
+  <tr>
+    <th align="left" style="width:34%; padding:12px; background:#fbfaf7; border-bottom:1px solid #e8e1d2; color:#56616f; font-size:14px;">Allenamento</th>
+    <td style="padding:12px; border-bottom:1px solid #e8e1d2; font-size:14px;">{{ details.workout|default:"-" }}</td>
+  </tr>
+  <tr>
+    <th align="left" style="width:34%; padding:12px; background:#fbfaf7; color:#56616f; font-size:14px;">Equipaggio</th>
+    <td style="padding:12px; font-size:14px;">{{ details.crew }}</td>
+  </tr>
+</table>

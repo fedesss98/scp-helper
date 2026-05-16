@@ -247,6 +247,13 @@ class BookingCrewValidationTests(DomainFactoryMixin, TestCase):
     WELCOME_EMAIL_ENABLED=False,
 )
 class BookingNotificationTests(DomainFactoryMixin, TestCase):
+    def assert_has_html_alternative(self, message, expected_text):
+        self.assertEqual(len(message.alternatives), 1)
+        html, mimetype = message.alternatives[0]
+        self.assertEqual(mimetype, 'text/html')
+        self.assertIn(expected_text, html)
+        return html
+
     def test_notify_new_booking_sends_email_to_staff_and_linked_crew_users(self):
         User.objects.create_user(username='coach', email='coach@example.com', is_staff=True)
         alice_user = User.objects.create_user(username='alice', email='alice@example.com')
@@ -260,8 +267,11 @@ class BookingNotificationTests(DomainFactoryMixin, TestCase):
 
         self.assertTrue(sent)
         self.assertEqual(mail.outbox[0].to, ['coach@example.com', 'alice@example.com', 'club@example.com'])
-        self.assertIn('Booking created: Double on 2026-06-01', mail.outbox[0].subject)
-        self.assertIn('Crew: Alice Example, Bob Example', mail.outbox[0].body)
+        self.assertIn('Prenotazione creata: Double il 2026-06-01', mail.outbox[0].subject)
+        self.assertIn('Equipaggio: Alice Example, Bob Example', mail.outbox[0].body)
+        html = self.assert_has_html_alternative(mail.outbox[0], 'Prenotazione creata')
+        self.assertIn('Equipaggio', html)
+        self.assertIn('Alice Example, Bob Example', html)
 
     def test_notify_cancelled_booking_uses_snapshot(self):
         alice = self.create_athlete('Alice Example')
@@ -273,8 +283,37 @@ class BookingNotificationTests(DomainFactoryMixin, TestCase):
         sent = notify_booking_event(booking, 'cancelled', snapshot)
 
         self.assertTrue(sent)
-        self.assertIn('Cancelled booking:', mail.outbox[0].body)
-        self.assertIn('Crew: Alice Example', mail.outbox[0].body)
+        self.assertIn('Prenotazione cancellata:', mail.outbox[0].body)
+        self.assertIn('Equipaggio: Alice Example', mail.outbox[0].body)
+        html = self.assert_has_html_alternative(mail.outbox[0], 'Prenotazione cancellata')
+        self.assertIn('Single', html)
+        self.assertIn('Alice Example', html)
+
+    def test_notify_updated_booking_includes_current_and_previous_details(self):
+        alice = self.create_athlete('Alice Example')
+        bob = self.create_athlete('Bob Example')
+        boat = Boat.objects.create(name='Double', rower_seats=2)
+        slot = self.create_slot()
+        booking = self.create_booking(boat=boat, slot=slot, rowers=[alice])
+        snapshot = snapshot_booking(booking)
+        BookingCrewMember.objects.create(
+            booking=booking,
+            athlete=bob,
+            role=BookingCrewMember.ROLE_ROWER,
+            seat_number=2,
+        )
+
+        sent = notify_booking_event(booking, 'updated', snapshot)
+
+        self.assertTrue(sent)
+        self.assertIn('Prenotazione modificata: Double il 2026-06-01', mail.outbox[0].subject)
+        self.assertIn('Prenotazione corrente:', mail.outbox[0].body)
+        self.assertIn('Prenotazione precedente:', mail.outbox[0].body)
+        self.assertIn('Equipaggio: Alice Example, Bob Example', mail.outbox[0].body)
+        self.assertIn('Equipaggio: Alice Example', mail.outbox[0].body)
+        html = self.assert_has_html_alternative(mail.outbox[0], 'Prenotazione modificata')
+        self.assertIn('Prenotazione corrente', html)
+        self.assertIn('Prenotazione precedente', html)
 
 
 @override_settings(
@@ -284,6 +323,13 @@ class BookingNotificationTests(DomainFactoryMixin, TestCase):
 )
 class WelcomeEmailTests(TransactionTestCase):
     reset_sequences = True
+
+    def assert_has_html_alternative(self, message, expected_text):
+        self.assertEqual(len(message.alternatives), 1)
+        html, mimetype = message.alternatives[0]
+        self.assertEqual(mimetype, 'text/html')
+        self.assertIn(expected_text, html)
+        return html
 
     def test_creating_user_with_email_sends_welcome_email(self):
         user = User.objects.create_user(
@@ -296,6 +342,8 @@ class WelcomeEmailTests(TransactionTestCase):
         self.assertEqual(mail.outbox[0].subject, 'Benvenuto in SCP Helper')
         self.assertEqual(mail.outbox[0].to, ['newmember@example.com'])
         self.assertIn(user.get_username(), mail.outbox[0].body)
+        html = self.assert_has_html_alternative(mail.outbox[0], 'Benvenuto in SCP Helper')
+        self.assertIn(user.get_username(), html)
 
     def test_creating_user_without_email_does_not_send_welcome_email(self):
         User.objects.create_user(username='nomail', password='password123')
