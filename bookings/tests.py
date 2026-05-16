@@ -2,7 +2,7 @@ from datetime import date, time
 
 from django.contrib.auth.models import User
 from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 
 from .forms import AthleteForm, BookingForm, SlotBatchForm, SlotForm
@@ -244,6 +244,7 @@ class BookingCrewValidationTests(DomainFactoryMixin, TestCase):
     BOOKING_NOTIFICATION_EXTRA_RECIPIENTS=['club@example.com'],
     DEFAULT_FROM_EMAIL='bookings@example.com',
     EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    WELCOME_EMAIL_ENABLED=False,
 )
 class BookingNotificationTests(DomainFactoryMixin, TestCase):
     def test_notify_new_booking_sends_email_to_staff_and_linked_crew_users(self):
@@ -274,6 +275,32 @@ class BookingNotificationTests(DomainFactoryMixin, TestCase):
         self.assertTrue(sent)
         self.assertIn('Cancelled booking:', mail.outbox[0].body)
         self.assertIn('Crew: Alice Example', mail.outbox[0].body)
+
+
+@override_settings(
+    DEFAULT_FROM_EMAIL='bookings@example.com',
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    WELCOME_EMAIL_ENABLED=True,
+)
+class WelcomeEmailTests(TransactionTestCase):
+    reset_sequences = True
+
+    def test_creating_user_with_email_sends_welcome_email(self):
+        user = User.objects.create_user(
+            username='newmember',
+            email='newmember@example.com',
+            password='password123',
+        )
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Benvenuto in SCP Helper')
+        self.assertEqual(mail.outbox[0].to, ['newmember@example.com'])
+        self.assertIn(user.get_username(), mail.outbox[0].body)
+
+    def test_creating_user_without_email_does_not_send_welcome_email(self):
+        User.objects.create_user(username='nomail', password='password123')
+
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class BookingViewsTests(DomainFactoryMixin, TestCase):

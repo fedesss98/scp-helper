@@ -142,3 +142,36 @@ def notify_booking_event(booking, event_type, previous_booking=None):
 
 def notify_new_booking(booking):
     return notify_booking_event(booking, 'created')
+
+
+def build_welcome_email(user):
+    subject = 'Benvenuto in SCP Helper'
+    message = '\n'.join([
+        f'Ciao {user.get_full_name() or user.get_username()},',
+        '',
+        'Il tuo account su SCP Helper e stato creato.',
+        'Puoi accedere con il tuo nome utente e la password che ti e stata fornita.',
+        '',
+        'Se non ti aspettavi questa email, ignorala oppure contatta l\'amministratore del club.',
+    ])
+    return subject, message
+
+
+def send_welcome_email(user):
+    if not user.email:
+        return False
+
+    subject, message = build_welcome_email(user)
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception('Failed to send welcome email for user %s.', user.pk)
+        return False
+
+    return True

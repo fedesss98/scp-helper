@@ -82,6 +82,24 @@ Open http://localhost:8000 and log in as `admin`.
 
 User accounts and staff permissions are managed only from Django's built-in admin panel at `/django-admin/`.
 
+## Email Setup with Brevo
+
+Outgoing mail already uses Django's standard SMTP backend, so Brevo works by setting environment variables.
+
+Use these values as a starting point:
+
+- `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`
+- `EMAIL_HOST=smtp-relay.brevo.com`
+- `EMAIL_PORT=587`
+- `EMAIL_USE_TLS=True`
+- `EMAIL_HOST_USER=your-brevo-login`
+- `EMAIL_HOST_PASSWORD=your-brevo-smtp-key`
+- `DEFAULT_FROM_EMAIL=your@yourdomain.com`
+
+The `DEFAULT_FROM_EMAIL` address should be a sender verified in Brevo, such as the Hostinger mailbox on your domain.
+
+When a new Django user is created with an email address, the app now sends a welcome email automatically.
+
 ### Create slots
 Use **Slot** in the app nav. You can create a single concrete slot or use the batch form to generate every selected weekday over a date range.
 

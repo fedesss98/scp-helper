@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bookings',
+    'bookings.apps.BookingsConfig',
 ]
 
 MIDDLEWARE = [
@@ -97,10 +97,11 @@ LOGIN_LOCKOUT_SECONDS = int(os.environ.get('LOGIN_LOCKOUT_SECONDS', '300'))
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'bookings@example.com')
 BOOKING_NOTIFICATION_EXTRA_RECIPIENTS = env_list('BOOKING_NOTIFICATION_EXTRA_RECIPIENTS')
+WELCOME_EMAIL_ENABLED = env_bool('WELCOME_EMAIL_ENABLED', True)
 
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG or 'test' in sys.argv else 'django.core.mail.backends.smtp.EmailBackend',
 )
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
