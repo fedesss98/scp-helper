@@ -107,7 +107,7 @@ class AthleteFormTests(TestCase):
         form = AthleteForm(data={
             'first_name': 'Mario',
             'last_name': 'Rossi',
-            'date_of_birth': '2000-01-01',
+            'date_of_birth': '01/01/2000',
             'sex': Athlete.SEX_MALE,
             'is_active': 'on',
         })
@@ -116,9 +116,19 @@ class AthleteFormTests(TestCase):
         athlete = form.save()
 
         self.assertEqual(athlete.full_name, 'Mario Rossi')
+        self.assertEqual(athlete.date_of_birth, date(2000, 1, 1))
         self.assertEqual(athlete.sex, Athlete.SEX_MALE)
         self.assertIsNone(athlete.user)
         self.assertEqual(User.objects.count(), 0)
+
+    def test_athlete_form_renders_date_of_birth_in_italian_format(self):
+        athlete = Athlete(first_name='Mario', last_name='Rossi', date_of_birth=date(2000, 1, 31))
+        form = AthleteForm(instance=athlete)
+        rendered_field = str(form['date_of_birth'])
+
+        self.assertIn('value="31/01/2000"', rendered_field)
+        self.assertIn('placeholder="dd/mm/yyyy"', rendered_field)
+        self.assertNotIn('type="date"', rendered_field)
 
     def test_athlete_form_can_link_existing_user(self):
         user = User.objects.create_user(username='coach', first_name='Alice', last_name='Bianchi')
@@ -410,7 +420,7 @@ class AdminAthleteManagementTests(TestCase):
         response = self.client.post(reverse('admin_create_athlete'), {
             'first_name': 'Mario',
             'last_name': 'Rossi',
-            'date_of_birth': '2000-01-01',
+            'date_of_birth': '01/01/2000',
             'sex': Athlete.SEX_MALE,
             'is_active': 'on',
         }, secure=True)
@@ -418,6 +428,7 @@ class AdminAthleteManagementTests(TestCase):
         self.assertRedirects(response, reverse('admin_athletes'), fetch_redirect_response=False)
         athlete = Athlete.objects.get(last_name='Rossi')
         self.assertEqual(athlete.first_name, 'Mario')
+        self.assertEqual(athlete.date_of_birth, date(2000, 1, 1))
         self.assertIsNone(athlete.user)
         self.assertEqual(User.objects.exclude(pk=self.admin.pk).count(), 0)
 

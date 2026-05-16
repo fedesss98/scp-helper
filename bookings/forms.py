@@ -34,6 +34,16 @@ class TwentyFourHourTimeField(forms.TimeField):
 
 
 class AthleteForm(forms.ModelForm):
+    date_of_birth = forms.DateField(
+        required=False,
+        input_formats=['%d/%m/%Y'],
+        widget=forms.DateInput(
+            format='%d/%m/%Y',
+            attrs={
+                'placeholder': 'dd/mm/yyyy',
+            },
+        ),
+    )
     user = forms.ModelChoiceField(
         queryset=User.objects.none(),
         required=False,
@@ -50,9 +60,6 @@ class AthleteForm(forms.ModelForm):
             'date_of_birth': 'Data di nascita',
             'sex': 'Sesso',
             'is_active': 'Atleta attivo',
-        }
-        widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
