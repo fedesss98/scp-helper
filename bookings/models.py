@@ -153,19 +153,11 @@ class Slot(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-<<<<<<< HEAD
         ordering = ["day_of_week", "start_time"]
         constraints = [
             models.UniqueConstraint(
                 fields=["day_of_week", "start_time", "end_time"],
                 name="unique_bookable_slot",
-=======
-        ordering = ['date', 'start_time']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['date', 'start_time', 'end_time'],
-                name='unique_slot_interval',
->>>>>>> main
             ),
         ]
 
@@ -185,7 +177,6 @@ class Slot(models.Model):
 
 
 class Boat(models.Model):
-<<<<<<< HEAD
     CATEGORY_SINGLE_COASTAL = "1xC"
     CATEGORY_DOUBLE_COASTAL = "2xC"
     CATEGORY_DOUBLE = "2x"
@@ -214,19 +205,10 @@ class Boat(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.category})"
-=======
-    name = models.CharField(max_length=100)
-    rower_seats = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1)])
-    requires_cox = models.BooleanField(default=False)
-    description = models.TextField(blank=True)
-    color = models.CharField(max_length=7, default='#2196F3', help_text='Hex color for calendar display')
-    is_active = models.BooleanField(default=True)
->>>>>>> main
 
     class Meta:
         ordering = ["name"]
 
-<<<<<<< HEAD
 
 class Booking(models.Model):
     boat = models.ForeignKey(Boat, on_delete=models.CASCADE, related_name="bookings")
@@ -238,11 +220,6 @@ class Booking(models.Model):
 
     class Meta:
         ordering = ["date", "start_time"]
-=======
-    @property
-    def total_crew_size(self):
-        return self.rower_seats + (1 if self.requires_cox else 0)
->>>>>>> main
 
     def __str__(self):
         suffix = '+' if self.requires_cox else 'x'
