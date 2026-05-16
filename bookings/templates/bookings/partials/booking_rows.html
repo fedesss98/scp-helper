@@ -1,3 +1,4 @@
+{% load booking_extras %}
 {% for booking in bookings %}
 <tr class="{% if is_past %}past-row{% endif %}">
   <td>{% if is_past %}{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}{% else %}<strong>{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}</strong>{% endif %}</td>
