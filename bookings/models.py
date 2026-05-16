@@ -119,6 +119,13 @@ class SlotBatch(models.Model):
                 yield cursor
             cursor += timedelta(days=1)
 
+    @property
+    def linked_slots_are_active(self):
+        linked_slots = Slot.objects.filter(batch_link__batch=self)
+        if not linked_slots.exists():
+            return True
+        return not linked_slots.filter(is_active=False).exists()
+
     def create_slots(self):
         created_slots = []
         for slot_date in self.matching_dates():
@@ -133,8 +140,23 @@ class SlotBatch(models.Model):
                 },
             )
             if created:
+                SlotBatchSlot.objects.get_or_create(batch=self, slot=slot)
                 created_slots.append(slot)
         return created_slots
+
+    def update_linked_slots(self, *, start_time, end_time, workout, is_active):
+        linked_slots = Slot.objects.filter(batch_link__batch=self)
+        updated = linked_slots.update(
+            start_time=start_time,
+            end_time=end_time,
+            workout=workout,
+            is_active=is_active,
+        )
+        self.start_time = start_time
+        self.end_time = end_time
+        self.workout = workout
+        self.save(update_fields=['start_time', 'end_time', 'workout'])
+        return updated
 
     def __str__(self):
         return (
@@ -174,6 +196,21 @@ class Slot(models.Model):
     def __str__(self):
         workout = f' - {self.workout.name}' if self.workout else ''
         return f'{self.date:%Y-%m-%d} {self.start_time:%H:%M}-{self.end_time:%H:%M}{workout}'
+
+
+class SlotBatchSlot(models.Model):
+    batch = models.ForeignKey(SlotBatch, on_delete=models.CASCADE, related_name='slot_links')
+    slot = models.OneToOneField(Slot, on_delete=models.CASCADE, related_name='batch_link')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['slot__date', 'slot__start_time']
+        constraints = [
+            models.UniqueConstraint(fields=['batch', 'slot'], name='unique_slot_batch_link'),
+        ]
+
+    def __str__(self):
+        return f'{self.batch} -> {self.slot}'
 
 
 class Boat(models.Model):

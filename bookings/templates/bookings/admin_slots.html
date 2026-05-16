@@ -26,6 +26,9 @@
           {% if slot.workout %}
           <span class="muted">{{ slot.workout.name }}</span>
           {% endif %}
+          {% if slot.batch_id %}
+          <span class="muted">Batch {{ slot.batch_id }}</span>
+          {% endif %}
           {% if slot.is_active %}
           <span class="slot-status slot-status-active">Attivo</span>
           {% else %}
@@ -34,6 +37,9 @@
         </div>
         <div class="slot-actions">
           <a href="{% url 'admin_edit_slot' slot.id %}" class="btn btn-ghost btn-sm">Modifica</a>
+          {% if slot.batch_id %}
+          <a href="{% url 'admin_edit_slot_batch' slot.batch_id %}" class="btn btn-ghost btn-sm">Modifica in blocco</a>
+          {% endif %}
           <form method="post" action="{% url 'admin_toggle_slot' slot.id %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost btn-sm">

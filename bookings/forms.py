@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 
-from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch
+from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, Workout
 
 
 def build_time_choices(step_minutes=30):
@@ -122,6 +122,37 @@ class SlotBatchForm(forms.ModelForm):
         end = cleaned.get('end_time')
         if start_date and end_date and end_date < start_date:
             raise ValidationError('End date must be after start date.')
+        if start and end and end <= start:
+            raise ValidationError('End time must be after start time.')
+        return cleaned
+
+
+class SlotBatchEditForm(forms.Form):
+    start_time = TwentyFourHourTimeField(label='Ora inizio')
+    end_time = TwentyFourHourTimeField(label='Ora fine')
+    workout = forms.ModelChoiceField(
+        queryset=Workout.objects.none(),
+        required=False,
+        label='Workout',
+    )
+    is_active = forms.BooleanField(required=False, label='Mostra in calendario')
+
+    def __init__(self, *args, batch=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.batch = batch
+        self.fields['workout'].queryset = Workout.objects.all()
+        if batch and not self.is_bound:
+            self.initial.update({
+                'start_time': batch.start_time,
+                'end_time': batch.end_time,
+                'workout': batch.workout,
+                'is_active': batch.linked_slots_are_active,
+            })
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get('start_time')
+        end = cleaned.get('end_time')
         if start and end and end <= start:
             raise ValidationError('End time must be after start time.')
         return cleaned

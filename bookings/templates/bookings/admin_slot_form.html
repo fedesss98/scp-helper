@@ -40,6 +40,9 @@
   {% else %}
   <div class="card">
     {% include "bookings/partials/form_errors.html" %}
+    {% if linked_slots %}
+    <p class="muted">Questa modifica verra applicata a {{ linked_slots|length }} slot collegati.</p>
+    {% endif %}
     <form method="post">
       {% csrf_token %}
       {% include "bookings/partials/form_fields.html" %}
