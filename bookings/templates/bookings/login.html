@@ -1,45 +1,8 @@
 {% extends "bookings/base.html" %}
-{% block title %}Login — Rowing Club{% endblock %}
-
+{% load static %}
+{% block title %}Login - Rowing Club{% endblock %}
 {% block extra_css %}
-<style>
-  body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-  .login-wrap { width: 100%; max-width: 380px; padding: 1rem; }
-  .login-logo {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  .login-logo h1 {
-    font-size: 2rem;
-    color: var(--sea-bright);
-    margin-bottom: 0.25rem;
-    letter-spacing: 0;
-  }
-  .login-logo p { color: var(--text-muted); font-size: 0.9rem; }
-  .login-card {
-    background: var(--navy-mid);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    box-shadow: var(--shadow-md);
-  }
-  .btn-login {
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    margin-top: 0.5rem;
-    background: var(--sea-bright);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
-  }
-  .btn-login:hover { background: #1d4ed8; box-shadow: var(--shadow-md); }
-  .btn-login:active { transform: scale(0.98); }
-</style>
+<link rel="stylesheet" href="{% static 'bookings/css/login.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -67,7 +30,7 @@
         <input type="password" name="password" id="id_password" autocomplete="current-password" required>
       </div>
       <input type="hidden" name="next" value="{{ next }}">
-      <button type="submit" class="btn-login">Log In →</button>
+      <button type="submit" class="btn-login">Log In</button>
     </form>
   </div>
 </div>

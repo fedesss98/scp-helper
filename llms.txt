@@ -1,0 +1,135 @@
+# SCP Helper / VogApp
+
+> Fast context for LLMs working on this repository. Read this before exploring the
+> whole tree.
+
+## Project Summary
+
+This is a small Django 4.2 web app for a rowing club. Users log in, view a
+weekly calendar of concrete rowing slots, and create/cancel complete-crew boat
+bookings. Staff/admin users manage users, athlete links, slots, boats, workouts,
+and bookings.
+
+The Django project package is `vogapp`; the main app is `bookings`.
+
+## High-Signal Files
+
+- `README.md`: setup, deployment, environment variables, and current domain overview.
+- `pyproject.toml` / `requirements.txt`: Python and dependency constraints.
+- `vogapp/settings.py`: environment loading, database config, security flags,
+  email settings, static file setup, auth redirects.
+- `vogapp/urls.py`: root URL wiring, login/logout, and inclusion of bookings URLs.
+- `bookings/models.py`: core data model:
+  - `Athlete`: sports identity, optionally linked to a Django `User`.
+  - `Workout`: reusable workout label/description.
+  - `SlotBatch`: recurrence helper used to generate concrete slots.
+  - `Slot`: concrete date/time interval, optionally linked to one workout.
+  - `Boat`: boat name, rower seats, optional cox requirement, active/color metadata.
+  - `Booking`: one boat reserved for one slot.
+  - `BookingCrewMember`: through model for rower seats and cox role.
+- `bookings/forms.py`: main business validation for complete crews and no double-booking.
+- `bookings/views.py`: calendar, booking/cancel flow, admin user/slot/booking screens,
+  and custom throttled login.
+- `bookings/urls.py`: route names and URL structure.
+- `bookings/notifications.py`: recipient collection and email body generation for
+  booking lifecycle events.
+- `bookings/tests.py`: executable specification for slot batches, user-athlete linking,
+  complete crew validation, notifications, permissions, and rendered booking visibility.
+- `setup_initial_data.py`: seeds workouts, boats, current-month slots, and the first admin user.
+- `render.yaml`: Render deployment config.
+
+## Lower-Signal Files For Initial Comprehension
+
+You can usually skip these until changing UI, styling, deployment plumbing, or
+schema history:
+
+- `bookings/static/bookings/css/*.css`: styling only.
+- `bookings/static/bookings/js/nav.js`: navigation behavior only.
+- `bookings/templates/**/*.html`: presentation layer.
+- `bookings/migrations/*.py`: generated schema history. This project intentionally
+  reset migrations after a destructive model redesign.
+- `vogapp/wsgi.py`: standard deployment entry point.
+- `bookings/__init__.py`, `vogapp/__init__.py`,
+  `bookings/templatetags/__init__.py`: package markers.
+- `.venv/`, `.mypy_cache/`, `.virtual_documents/`, `data/`, `notebooks/`,
+  `db.sqlite3`, `staticfiles/`: local/runtime/generated data. Do not treat as
+  source of truth.
+
+## Runtime Model
+
+- Authentication uses Django's built-in `User`.
+- `Athlete` is the rowing/sports person model and may exist without a linked user.
+- `Athlete.user` is an optional one-to-one link to `User`.
+- Creating a user through the app can link an existing athlete or create one from
+  the user's full name.
+- Staff/admin is defined by `user.is_staff or user.is_superuser`.
+- Main user-facing pages require login.
+- App-level admin pages are protected by `user_passes_test`.
+- Django's built-in admin remains available at `/django-admin/`.
+
+## Important Routes
+
+- `/login/`: custom `ThrottledLoginView`.
+- `/logout/`: Django logout view, expected to be POSTed from the nav.
+- `/` and `/calendar/`: weekly calendar.
+- `/book/`: create a complete-crew booking.
+- `/cancel/<booking_id>/`: cancel a booking by POST.
+- `/my-bookings/`: bookings for the current user's linked athlete.
+- `/admin/users/`: app-level user and user-athlete-link management.
+- `/admin/slots/`: app-level concrete slot and batch slot creation.
+- `/admin/bookings/`: app-level booking management.
+
+## Booking Rules
+
+The most important rules live in `bookings/forms.py` in `BookingForm.clean`.
+
+- A booking is strict and complete: all rower seats must be filled.
+- If `Boat.requires_cox` is true, one cox must also be selected.
+- The same athlete cannot appear twice in the same booking.
+- A boat can only have one booking per slot.
+- An athlete cannot be booked into multiple boats in the same slot.
+- Past slots cannot be booked.
+- Admin-created bookings use the same validation as user-created bookings.
+
+## Slots And Workouts
+
+Slots are concrete date/time intervals. Recurrence is handled by `SlotBatch`,
+which generates concrete `Slot` rows for matching weekdays over a date range.
+
+Each slot can point to one reusable `Workout`, such as `S&C`, `Tecnica`, or
+`4x3000 rest 10'`.
+
+## Notifications
+
+Booking email notifications are sent after transaction commit from views. The
+recipient list includes active staff emails, linked crew user emails, previous
+crew emails for updates/cancellations where relevant, and
+`BOOKING_NOTIFICATION_EXTRA_RECIPIENTS`.
+
+In local debug mode, Django uses the console email backend by default.
+
+## Development Commands
+
+```bash
+python -m venv venv
+pip install -r requirements.txt
+python manage.py migrate
+python setup_initial_data.py
+python manage.py runserver
+python manage.py test
+```
+
+Set `SECRET_KEY` before running Django commands.
+
+## Common Change Entry Points
+
+- Change booking validation: start in `bookings/forms.py`, then adjust tests.
+- Change model relationships: start in `bookings/models.py`, then migrations/tests.
+- Change calendar data/context: start in `bookings/views.py` and
+  `bookings/templatetags/booking_extras.py`.
+- Change rendered UI: inspect the relevant file under
+  `bookings/templates/bookings/`, then CSS under
+  `bookings/static/bookings/css/`.
+- Change notification behavior: start in `bookings/notifications.py`, then tests.
+- Change seed workouts/boats/slots/admin bootstrap: update `setup_initial_data.py`.
+- Change deployment/runtime config: update `vogapp/settings.py` and `render.yaml`.

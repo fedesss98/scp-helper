@@ -2,39 +2,53 @@
 {% block title %}{{ title }} - VogApp{% endblock %}
 
 {% block content %}
-<div style="max-width:520px">
-  <div style="margin-bottom:1rem">
-    <a href="{% url 'admin_slots' %}" style="color:var(--text-muted);text-decoration:none;font-size:.9rem">Back to Slots</a>
-  </div>
-
+<div class="container-narrow">
+  {% include "bookings/partials/back_link.html" with href="/admin/slots/" label="Torna agli Slot" %}
   <h1>{{ title }}</h1>
 
+  {% if single_form and batch_form %}
   <div class="card">
-    {% if form.non_field_errors %}
-    <div class="form-errors">
-      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-    </div>
-    {% endif %}
-
+    <h2 class="section-title-primary">Slot singolo</h2>
     <form method="post">
       {% csrf_token %}
-      {% for field in form %}
-      <div class="form-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}
-        <p style="color:var(--text-muted);font-size:.8rem;margin-top:.25rem">{{ field.help_text }}</p>
-        {% endif %}
-        {% if field.errors %}
-        <p style="color:#b91c1c;font-size:.82rem;margin-top:.3rem">{{ field.errors.0 }}</p>
-        {% endif %}
-      </div>
-      {% endfor %}
-      <div style="display:flex;gap:.75rem;margin-top:.5rem;flex-wrap:wrap">
-        <button type="submit" class="btn btn-primary">Save Slot</button>
-        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancel</a>
+      <input type="hidden" name="create_mode" value="single" />
+      {% with form=single_form %}
+      {% include "bookings/partials/form_errors.html" %}
+      {% include "bookings/partials/form_fields.html" %}
+      {% endwith %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary">Crea Slot</button>
       </div>
     </form>
   </div>
+
+  <div class="card">
+    <h2 class="section-title-primary">Crea in batch</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="create_mode" value="batch" />
+      {% with form=batch_form %}
+      {% include "bookings/partials/form_errors.html" %}
+      {% include "bookings/partials/form_fields.html" %}
+      {% endwith %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-gold">Crea Ricorrenze</button>
+        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancella</a>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <div class="card">
+    {% include "bookings/partials/form_errors.html" %}
+    <form method="post">
+      {% csrf_token %}
+      {% include "bookings/partials/form_fields.html" %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary">Salva Slot</button>
+        <a href="{% url 'admin_slots' %}" class="btn btn-ghost">Cancella</a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

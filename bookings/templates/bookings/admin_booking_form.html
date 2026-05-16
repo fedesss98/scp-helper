@@ -2,34 +2,18 @@
 {% block title %}{{ title }} - VogApp{% endblock %}
 
 {% block content %}
-<div style="max-width:520px">
-  <div style="margin-bottom:1.5rem">
-    <a href="{% url 'admin_all_bookings' %}" style="color:var(--text-muted);text-decoration:none;font-size:0.9rem">&larr; Back to All Bookings</a>
-  </div>
-
+<div class="container-narrow">
+  {% include "bookings/partials/back_link.html" with href="/admin/bookings/" label="Torna alle Prenotazioni" %}
   <h1>{{ title }}</h1>
 
   <div class="card">
-    {% if form.non_field_errors %}
-    <div class="form-errors">
-      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-    </div>
-    {% endif %}
-
+    {% include "bookings/partials/form_errors.html" %}
     <form method="post">
       {% csrf_token %}
-      {% for field in form %}
-      <div class="form-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
-        <p style="color:#ef9a9a;font-size:0.82rem;margin-top:0.3rem">{{ field.errors.0 }}</p>
-        {% endif %}
-      </div>
-      {% endfor %}
-      <div style="display:flex;gap:0.75rem;margin-top:0.5rem;flex-wrap:wrap">
-        <button type="submit" class="btn btn-gold">Save Booking</button>
-        <a href="{% url 'admin_all_bookings' %}" class="btn btn-ghost">Cancel</a>
+      {% include "bookings/partials/form_fields.html" %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-gold">Salva Prenotazione</button>
+        <a href="{% url 'admin_all_bookings' %}" class="btn btn-ghost">Cancella</a>
       </div>
     </form>
   </div>

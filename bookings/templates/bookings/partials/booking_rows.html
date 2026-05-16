@@ -1,0 +1,16 @@
+{% for booking in bookings %}
+<tr class="{% if is_past %}past-row{% endif %}">
+  <td>{% if is_past %}{{ booking.slot.date|date:"D, d M Y" }}{% else %}<strong>{{ booking.slot.date|date:"D, d M Y" }}</strong>{% endif %}</td>
+  <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>
+  <td>{{ booking.boat.name }}</td>
+  <td>{% include "bookings/partials/shared_boat_badges.html" with bookings=booking.crew.all only %}</td>
+  {% if show_cancel %}
+  <td>
+    <form method="post" action="/cancel/{{ booking.id }}/" class="inline-form">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancellare questa prenotazione?')">Cancella</button>
+    </form>
+  </td>
+  {% endif %}
+</tr>
+{% endfor %}

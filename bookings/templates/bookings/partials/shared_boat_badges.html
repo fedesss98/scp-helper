@@ -1,0 +1,7 @@
+{% if bookings %}
+  {% for athlete in bookings %}
+  <span class="badge">{{ athlete.full_name }}</span>
+  {% endfor %}
+{% else %}
+  <span class="muted">-</span>
+{% endif %}

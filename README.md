@@ -1,13 +1,15 @@
-# 🚣 Rowing Club Booking App
+# Rowing Club Booking App
 
-A simple Django web app for athletes to book coastal rowing boat sessions.
+A simple Django web app for managing rowing club slots, workouts, boats, athletes, and complete-crew bookings.
 
 ## Features
 
-- **Athletes** can browse a weekly calendar and book/cancel time slots
-- **Admin** can create athletes, change passwords, and manage all bookings
-- **Multiple boats** side-by-side in a single calendar view
-- No self-registration — admin controls all accounts
+- Athletes can browse a weekly calendar and book/cancel complete boat crews.
+- Admin users can create users, link users to athlete profiles, create slots in batch, and manage bookings.
+- Slots are concrete date/time intervals, optionally linked to a reusable workout.
+- Boats have rower seats and can optionally require a cox.
+- Bookings reserve one boat for one slot and must include the full crew.
+- No self-registration: admin users control accounts.
 
 ---
 
@@ -30,12 +32,19 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-### 4. Create boats + admin user
+If you are upgrading from the previous prototype schema, recreate the local
+database first because the booking models were intentionally redesigned
+destructively.
+
+### 4. Create starter data + admin user
 ```bash
 python setup_initial_data.py
 ```
+
 This creates:
+- Starter workouts from `setup_initial_data.py`
 - Starter boats from `setup_initial_data.py`
+- Concrete slots for the current month using batch generation
 - Admin user `admin`
 
 Set `ADMIN_PASSWORD` before running the script to choose the initial password.
@@ -51,15 +60,31 @@ Open http://localhost:8000 and log in as `admin`.
 
 ---
 
+## Domain Model
+
+- `Athlete`: sports identity with full name, optional date of birth, sex, active flag, and optional linked Django user.
+- `User`: login identity and permissions. Creating a user can also create/link an athlete profile.
+- `Workout`: reusable text label/description such as `S&C` or `4x3000 rest 10'`.
+- `Slot`: concrete date/time interval, optionally linked to one workout.
+- `SlotBatch`: helper record used to generate concrete slots for repeated weekdays.
+- `Boat`: boat name, rower seat count, optional cox requirement, color, and active flag.
+- `Booking`: one boat in one slot with a complete crew.
+- `BookingCrewMember`: through model for booking crew, preserving rower seats and cox role.
+
 ## Admin Tasks
 
-### Create an athlete
-1. Log in as admin
-2. Go to **Athletes** in the nav
-3. Click **+ Add Athlete**, fill in username and password
+### Create a user and athlete link
+1. Log in as admin.
+2. Go to **Utenti** in the nav.
+3. Click **+ Aggiungi Utente**.
+4. Either link an existing athlete or leave the athlete field empty to create one from the user's name.
+5. Use the Staff checkbox for admin privileges.
 
-### Change boat names/colors
-Use Django's built-in admin panel at `/django-admin/` or edit `setup_initial_data.py`.
+### Create slots
+Use **Slot** in the app nav. You can create a single concrete slot or use the batch form to generate every selected weekday over a date range.
+
+### Manage workouts, boats, and standalone athletes
+Use Django's built-in admin panel at `/django-admin/`.
 
 ---
 

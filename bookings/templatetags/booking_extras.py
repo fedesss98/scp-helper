@@ -1,29 +1,16 @@
 from django import template
 
+
 register = template.Library()
 
+
 @register.simple_tag
-def get_slot_bookings(booking_map, boat_id, day, slot_start, slot_end):
-    """Return bookings for a boat/day that overlap the displayed time slot."""
-    key = (boat_id, str(day))
-    bookings = booking_map.get(key, [])
-    return [
-        booking for booking in bookings
-        if booking.start_time < slot_end and booking.end_time > slot_start
-    ]
+def get_slot_booking(booking_map, boat_id, slot_id):
+    return booking_map.get((boat_id, slot_id))
 
 
 @register.simple_tag
-def user_booking(bookings, user):
-    for booking in bookings:
-        if booking.athlete.id == user.id:
-            return booking
-    return None
-
-
-@register.simple_tag
-def other_bookings(bookings, user):
-    return [
-        booking for booking in bookings
-        if booking.athlete.id != user.id
-    ]
+def athlete_in_booking(booking, athlete):
+    if not booking or not athlete:
+        return False
+    return any(member.pk == athlete.pk for member in booking.crew.all())

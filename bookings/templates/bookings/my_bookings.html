@@ -1,81 +1,45 @@
 {% extends "bookings/base.html" %}
-{% block title %}My Bookings — Rowing Club{% endblock %}
+{% block title %}Le Mie Prenotazione - VogApp{% endblock %}
 
 {% block content %}
-<h1>My Bookings</h1>
+<h1>Le mie Prenotazioni</h1>
 
-<div class="card" style="margin-bottom:1.5rem">
-  <h2 style="margin-bottom:1rem;color:var(--sea-bright)">Upcoming</h2>
+<div class="card">
+  <h2 class="section-title-primary">In arrivo</h2>
   {% if upcoming %}
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Boat</th>
-        <th>Same boat</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Imbarcazione</th>
+        <th>Equipaggio</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      {% for booking in upcoming %}
-      <tr>
-        <td><strong>{{ booking.date|date:"D, d M Y" }}</strong></td>
-        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
-        <td>{{ booking.boat.name }}</td>
-        <td>
-          {% if booking.shared_boat_bookings %}
-            {% for shared_booking in booking.shared_boat_bookings %}
-            <span class="badge">{{ shared_booking.athlete.username }}</span>
-            {% endfor %}
-          {% else %}
-            <span style="color:var(--text-muted)">Only you</span>
-          {% endif %}
-        </td>
-        <td>
-          <form method="post" action="/cancel/{{ booking.id }}/" style="display:inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?')">Cancel</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
+      {% include "bookings/partials/booking_rows.html" with bookings=upcoming show_cancel=True %}
     </tbody>
   </table>
   {% else %}
-  <p style="color:var(--text-muted)">No upcoming bookings. <a href="/calendar/" style="color:var(--sea-bright)">Book a slot →</a></p>
+  <p class="empty-state">Nessuna Prenotazione in arrivo. <a href="{% url 'calendar' %}">Prenota uno slot</a></p>
   {% endif %}
 </div>
 
 {% if past %}
 <div class="card">
-  <h2 style="margin-bottom:1rem;color:var(--text-muted)">Past (last 10)</h2>
+  <h2 class="section-title-muted">Ultime 10 Prenotazioni</h2>
   <table>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Boat</th>
-        <th>Same boat</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Imbarcazione</th>
+        <th>Equipaggio</th>
       </tr>
     </thead>
     <tbody>
-      {% for booking in past %}
-      <tr style="opacity:0.6">
-        <td>{{ booking.date|date:"D, d M Y" }}</td>
-        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
-        <td>{{ booking.boat.name }}</td>
-        <td>
-          {% if booking.shared_boat_bookings %}
-            {% for shared_booking in booking.shared_boat_bookings %}
-            <span class="badge">{{ shared_booking.athlete.username }}</span>
-            {% endfor %}
-          {% else %}
-            <span style="color:var(--text-muted)">Only you</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
+      {% include "bookings/partials/booking_rows.html" with bookings=past is_past=True %}
     </tbody>
   </table>
 </div>

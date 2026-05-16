@@ -1,0 +1,54 @@
+{% load booking_extras %}
+{% get_slot_booking booking_map boat.id slot.id as booking %}
+{% athlete_in_booking booking current_athlete as mine %}
+<div class="boat-cell" style="border-left-color: {{ boat.color }}">
+  <div class="boat-name">
+    <span>{{ boat.name }}</span>
+    <span class="seat-count">{{ boat.rower_seats }}{% if boat.requires_cox %}+{% else %}x{% endif %}</span>
+  </div>
+
+  {% if section.date < today %}
+    {% if booking %}
+    <div class="booking-names">
+      {% for athlete in booking.crew.all %}
+      <span class="taken-name">{{ athlete.full_name }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="booking-names">Nessuna prenotazione</div>
+    {% endif %}
+  {% elif booking %}
+    <div class="booking-state">
+      <div>
+        {% if mine %}
+        <span class="booked-label">Tuo</span>
+        {% else %}
+        <span class="booked-label">Prenotato</span>
+        {% endif %}
+        <div class="booking-names booking-names-spaced">
+          {% for athlete in booking.crew.all %}
+          <span class="taken-name">{{ athlete.full_name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% if mine or is_admin %}
+      <div class="booking-actions">
+        <form method="post" action="/cancel/{{ booking.id }}/">
+          {% csrf_token %}
+          <input type="hidden" name="week_offset" value="{{ week_offset }}" />
+          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancellare questa prenotazione?');">Cancella</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="booking-state">
+      <span class="booking-names">Libero</span>
+      {% if is_admin %}
+      <a href="{% url 'admin_create_booking' %}?slot={{ slot.id }}&boat={{ boat.id }}" class="btn btn-primary btn-sm">Assegna</a>
+      {% else %}
+      <a href="{% url 'book_slot' %}?slot={{ slot.id }}&boat={{ boat.id }}" class="btn btn-primary btn-sm">Prenota</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

@@ -1,378 +1,33 @@
 {% extends "bookings/base.html" %}
-{% load booking_extras %}
-{% block title %}Calendar - VogApp{% endblock %}
+{% load static %}
+{% block title %}Calendario - VogApp{% endblock %}
 {% block extra_css %}
-<style>
-  .calendar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .calendar-header h1 {
-    margin: 0;
-  }
-
-  .week-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .week-label {
-    font-size: 0.95rem;
-    font-weight: 700;
-    min-width: 220px;
-    text-align: center;
-    color: var(--text);
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.48rem 0.85rem;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .calendar-list {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .day-panel {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: #fff;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .day-panel-today {
-    border-color: #93c5fd;
-    box-shadow:
-      0 0 0 3px rgba(147, 197, 253, 0.28),
-      var(--shadow-sm);
-  }
-
-  .day-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.85rem 1rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .day-title {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .day-name {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: 0;
-  }
-
-  .day-date {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-
-  .today-badge {
-    color: #fff;
-    background: #2563eb;
-    border-radius: 999px;
-    padding: 0.18rem 0.55rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0;
-  }
-
-  .slot-list {
-    display: grid;
-  }
-
-  .slot-row {
-    display: grid;
-    grid-template-columns: minmax(82px, 100px) 1fr;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .slot-row:last-child {
-    border-bottom: none;
-  }
-
-  .slot-time {
-    background: #f8fafc;
-    border-right: 1px solid var(--border);
-    padding: 0.85rem 0.75rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.12rem;
-    min-height: 128px;
-  }
-
-  .slot-time strong {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .slot-time span {
-    color: var(--text-muted);
-    font-size: 0.78rem;
-  }
-
-  .boat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  }
-
-  .boat-cell {
-    min-height: 128px;
-    padding: 0.75rem;
-    border-right: 1px solid var(--border);
-    border-left: 4px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    background: #fff;
-  }
-
-  .boat-cell:hover {
-    background: #f8fafc;
-  }
-
-  .boat-cell:last-child {
-    border-right: none;
-  }
-
-  .boat-name {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--text);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0;
-  }
-
-  .seat-count {
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-    white-space: nowrap;
-  }
-
-  .booking-state {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    min-height: 70px;
-  }
-
-  .booking-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.4rem;
-    margin-left: auto;
-  }
-
-  .booking-management-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    width: 100%;
-  }
-
-  .booking-management-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-  }
-
-  .booking-names {
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    line-height: 1.25;
-  }
-
-  .taken-name {
-    color: #475569;
-    display: block;
-    font-weight: 600;
-    font-size: 0.78rem;
-  }
-
-  .booked-label {
-    color: #b45309;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-radius: 999px;
-    padding: 0.2rem 0.55rem;
-    font-weight: 700;
-    font-size: 0.82rem;
-  }
-
-  .slot-past {
-    opacity: 0.58;
-    pointer-events: none;
-  }
-
-  .slot-empty {
-    padding: 1rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-  }
-
-  .legend {
-    display: flex;
-    gap: 1.25rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.35rem 0.6rem;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-  }
-
-  @media (max-width: 760px) {
-    .calendar-header {
-      align-items: stretch;
-    }
-
-    .week-nav {
-      width: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
-
-    .week-label {
-      grid-column: 1 / -1;
-      min-width: 0;
-      order: -1;
-      text-align: left;
-    }
-
-    .week-nav .btn {
-      width: 100%;
-    }
-
-    .slot-row {
-      grid-template-columns: 1fr;
-    }
-
-    .slot-time {
-      min-height: 0;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      flex-direction: row;
-      align-items: baseline;
-      justify-content: flex-start;
-    }
-
-    .boat-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .boat-cell {
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .boat-cell:last-child {
-      border-bottom: none;
-    }
-
-    .booking-state {
-      align-items: stretch;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .booking-actions {
-      width: 100%;
-      align-items: stretch;
-      margin-left: 0;
-    }
-
-    .booking-state .btn,
-    .booking-state button {
-      width: 100%;
-    }
-  }
-</style>
+<link rel="stylesheet" href="{% static 'bookings/css/calendar.css' %}" />
 {% endblock %}
 
 {% block content %}
 <div class="calendar-header">
-  <h1>Booking Calendar</h1>
+  <h1>Calendario Prenotazioni</h1>
   <div class="week-nav">
-    <a
-      href="/calendar/?week={{ week_offset|add:'-1' }}"
-      class="btn btn-ghost btn-sm"
-      >Prev</a
-    >
-    <span class="week-label">
-      {{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}
-    </span>
-    <a
-      href="/calendar/?week={{ week_offset|add:'1' }}"
-      class="btn btn-ghost btn-sm"
-      >Next</a
-    >
+    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm">Prima</a>
+    <span class="week-label">{{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}</span>
+    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">Dopo</a>
     {% if week_offset != 0 %}
-    <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Today</a>
+    <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Oggi</a>
     {% endif %}
   </div>
 </div>
 
 <div class="calendar-list">
   {% for section in day_sections %}
-  <section
-    class="day-panel {% if section.date == today %}day-panel-today{% endif %}"
-  >
+  <section class="day-panel {% if section.date == today %}day-panel-today{% endif %}">
     <header class="day-heading">
       <div class="day-title">
         <span class="day-name">{{ section.date|date:"l" }}</span>
         <span class="day-date">{{ section.date|date:"d M Y" }}</span>
       </div>
       {% if section.date == today %}
-      <span class="today-badge">Today</span>
+      <span class="today-badge">Oggi</span>
       {% endif %}
     </header>
 
@@ -382,132 +37,21 @@
       <div class="slot-row {% if section.date < today %}slot-past{% endif %}">
         <div class="slot-time">
           <strong>{{ slot.start_time|time:"H:i" }}</strong>
-          <span>until {{ slot.end_time|time:"H:i" }}</span>
+          <span>fino a {{ slot.end_time|time:"H:i" }}</span>
+          {% if slot.workout %}
+          <span>{{ slot.workout.name }}</span>
+          {% endif %}
         </div>
-
         <div class="boat-grid">
           {% for boat in boats %}
-          {% get_slot_bookings booking_map boat.id section.date slot.start_time slot.end_time as slot_bookings %}
-          {% user_booking slot_bookings request.user as mine %}
-          {% other_bookings slot_bookings request.user as companions %}
-          <div class="boat-cell" style="border-left-color: {{ boat.color }}">
-            <div class="boat-name">
-              <span>{{ boat.name }}</span>
-              <span class="seat-count"
-                >{{ slot_bookings|length }}/{{ boat.seats }}</span
-              >
-            </div>
-
-            {% if section.date < today %} {% if slot_bookings %}
-            <div class="booking-names">
-              {% for booking in slot_bookings %}
-              <span class="taken-name">{{ booking.athlete.username }}</span>
-              {% endfor %}
-            </div>
-            {% else %}
-            <div class="booking-names">No bookings</div>
-            {% endif %} {% elif mine %}
-            <div class="booking-state">
-              <div>
-                <span class="booked-label">Yours</span>
-                {% if companions %}
-                <div class="booking-names" style="margin-top: 0.4rem">
-                  {% for booking in companions %}
-                  <span class="taken-name">{{ booking.athlete.username }}</span>
-                  {% endfor %}
-                </div>
-                {% endif %}
-              </div>
-              <div class="booking-actions">
-                <form method="post" action="/cancel/{{ mine.id }}/">
-                  {% csrf_token %}
-                  <input
-                    type="hidden"
-                    name="week_offset"
-                    value="{{ week_offset }}"
-                  />
-                  <button
-                    type="submit"
-                    class="btn btn-danger btn-sm"
-                    onclick="return confirm('Cancel this booking?');"
-                  >
-                    Cancel
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {% elif slot_bookings|length < boat.seats %}
-            <div class="booking-state">
-              {% if slot_bookings %}
-              <div class="booking-names">
-                {% for booking in slot_bookings %}
-                <span class="taken-name">{{ booking.athlete.username }}</span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <span class="booking-names">Available</span>
-              {% endif %} {% if is_admin %}
-              <a
-                href="{% url 'admin_create_booking' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}"
-                class="btn btn-primary btn-sm"
-                >Assign</a
-              >
-              {% else %}
-              <a
-                href="{% url 'book_slot' %}?date={{ section.date|date:'Y-m-d' }}&boat={{ boat.id }}&start_time={{ slot.start_time|time:'H:i' }}&end_time={{ slot.end_time|time:'H:i' }}"
-                class="btn btn-primary btn-sm"
-                >Book</a
-              >
-              {% endif %}
-            </div>
-
-            {% else %}
-            <div class="booking-state">
-              {% if is_admin %}
-              <div class="booking-management-list">
-                {% for booking in slot_bookings %}
-                <div class="booking-management-row">
-                  <span class="taken-name">{{ booking.athlete.username }}</span>
-                  <form method="post" action="/cancel/{{ booking.id }}/">
-                    {% csrf_token %}
-                    <input
-                      type="hidden"
-                      name="week_offset"
-                      value="{{ week_offset }}"
-                    />
-                    <button
-                      type="submit"
-                      class="btn btn-danger btn-sm"
-                      onclick="return confirm('Remove this booking?');"
-                    >
-                      Remove
-                    </button>
-                  </form>
-                </div>
-                {% endfor %}
-                <span class="booking-names" style="text-align: center"
-                  >Full</span
-                >
-              </div>
-              {% else %}
-              <div class="booking-names">
-                {% for booking in slot_bookings %}
-                <span class="taken-name">{{ booking.athlete.username }}</span>
-                {% endfor %}
-                <span>Full</span>
-              </div>
-              {% endif %}
-            </div>
-            {% endif %}
-          </div>
+          {% include "bookings/partials/calendar_boat_cell.html" %}
           {% endfor %}
         </div>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <div class="slot-empty">No bookable slots.</div>
+    <div class="slot-empty">Non ci sono slot prenotabili.</div>
     {% endif %}
   </section>
   {% endfor %}
@@ -515,29 +59,20 @@
 
 <div class="legend">
   <div class="legend-item">
-    <div
-      class="legend-dot"
-      style="background: #dbeafe; border: 1px solid #93c5fd"
-    ></div>
-    Available
+    <div class="legend-dot legend-dot-available"></div>
+    Disponibile
   </div>
   <div class="legend-item">
-    <div
-      class="legend-dot"
-      style="background: #fef3c7; border: 1px solid #f59e0b"
-    ></div>
-    Your booking
+    <div class="legend-dot legend-dot-yours"></div>
+    Tua prenotazione
   </div>
   <div class="legend-item">
-    <div
-      class="legend-dot"
-      style="background: #f1f5f9; border: 1px solid #cbd5e1"
-    ></div>
-    Full or past
+    <div class="legend-dot legend-dot-full"></div>
+    Pieno o passato
   </div>
   {% for boat in boats %}
   <div class="legend-item">
-    <div class="legend-dot" style="background:{{ boat.color }}"></div>
+    <div class="legend-dot" style="background: {{ boat.color }}"></div>
     {{ boat.name }}
   </div>
   {% endfor %}
