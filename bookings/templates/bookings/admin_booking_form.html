@@ -10,9 +10,37 @@
     {% include "bookings/partials/form_errors.html" %}
     <form method="post">
       {% csrf_token %}
+      <input type="hidden" name="phase" value="{{ phase }}">
+      {% if phase == "crew" %}
+      <div class="form-group">
+        <label>Slot</label>
+        <p>{{ selected_slot }}</p>
+      </div>
+      <div class="form-group">
+        <label>Imbarcazione</label>
+        <p>{{ selected_boat }}</p>
+      </div>
+      {% for field in form %}
+        {% if field.name == "slot" or field.name == "boat" %}
+        {{ field.as_hidden }}
+        {% else %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+          <p class="field-help">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+          <p class="field-error">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      {% else %}
       {% include "bookings/partials/form_fields.html" %}
+      {% endif %}
       <div class="actions-row">
-        <button type="submit" class="btn btn-gold">Salva Prenotazione</button>
+        <button type="submit" class="btn btn-gold">{{ submit_label|default:"Salva Prenotazione" }}</button>
         <a href="{% url 'admin_all_bookings' %}" class="btn btn-ghost">Cancella</a>
       </div>
     </form>

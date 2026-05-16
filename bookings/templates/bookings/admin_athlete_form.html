@@ -1,0 +1,21 @@
+{% extends "bookings/base.html" %}
+{% block title %}{{ title }} - VogApp{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  {% include "bookings/partials/back_link.html" with href="/admin/athletes/" label="Torna agli Atleti" %}
+  <h1>{{ title }}</h1>
+
+  <div class="card">
+    {% include "bookings/partials/form_errors.html" %}
+    <form method="post">
+      {% csrf_token %}
+      {% include "bookings/partials/form_fields.html" %}
+      <div class="actions-row">
+        <button type="submit" class="btn btn-gold">Salva</button>
+        <a href="{% url 'admin_athletes' %}" class="btn btn-ghost">Cancella</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

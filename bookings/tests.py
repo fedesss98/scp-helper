@@ -5,7 +5,7 @@ from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .forms import BookingForm, ChangePasswordForm, CreateUserForm
+from .forms import AthleteForm, BookingForm, SlotBatchForm, SlotForm
 from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, Workout
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
@@ -65,43 +65,49 @@ class SlotBatchTests(TestCase):
         self.assertTrue(all(slot.start_time == time(11, 0) for slot in created_slots))
 
 
-class UserAthleteLinkTests(TestCase):
-    def test_create_user_form_creates_and_links_athlete_from_user_name(self):
-        form = CreateUserForm(data={
-            'username': 'mrossi',
+class SlotTimeFormTests(TestCase):
+    def test_slot_forms_use_24_hour_selects_for_times(self):
+        for form in (SlotForm(), SlotBatchForm()):
+            for field_name in ('start_time', 'end_time'):
+                field = form.fields[field_name]
+                rendered_field = form[field_name].as_widget()
+                self.assertEqual(field.widget.__class__.__name__, 'Select')
+                self.assertIn(('13:00', '13:00'), list(field.widget.choices))
+                self.assertNotIn('AM', rendered_field)
+                self.assertNotIn('PM', rendered_field)
+                self.assertNotIn('type="time"', rendered_field)
+
+
+class AthleteFormTests(TestCase):
+    def test_athlete_form_creates_athlete_without_creating_user(self):
+        form = AthleteForm(data={
             'first_name': 'Mario',
             'last_name': 'Rossi',
-            'email': 'mario@example.com',
-            'password': 'password123',
-            'confirm_password': 'password123',
             'date_of_birth': '2000-01-01',
             'sex': Athlete.SEX_MALE,
+            'is_active': 'on',
         })
 
         self.assertTrue(form.is_valid(), form.errors)
-        user = form.save()
+        athlete = form.save()
 
-        self.assertEqual(user.athlete_profile.full_name, 'Mario Rossi')
-        self.assertEqual(user.athlete_profile.sex, Athlete.SEX_MALE)
+        self.assertEqual(athlete.full_name, 'Mario Rossi')
+        self.assertEqual(athlete.sex, Athlete.SEX_MALE)
+        self.assertIsNone(athlete.user)
+        self.assertEqual(User.objects.count(), 0)
 
-    def test_create_user_form_can_link_existing_athlete_and_set_staff(self):
-        athlete = Athlete.objects.create(first_name='Alice', last_name='Bianchi')
-        form = CreateUserForm(data={
-            'username': 'coach',
+    def test_athlete_form_can_link_existing_user(self):
+        user = User.objects.create_user(username='coach', first_name='Alice', last_name='Bianchi')
+        form = AthleteForm(data={
             'first_name': 'Alice',
             'last_name': 'Bianchi',
-            'email': 'coach@example.com',
-            'password': 'password123',
-            'confirm_password': 'password123',
-            'is_staff': 'on',
-            'athlete': athlete.id,
+            'is_active': 'on',
+            'user': user.id,
         })
 
         self.assertTrue(form.is_valid(), form.errors)
-        user = form.save()
-        athlete.refresh_from_db()
+        athlete = form.save()
 
-        self.assertTrue(user.is_staff)
         self.assertEqual(athlete.user, user)
 
 
@@ -253,6 +259,67 @@ class BookingViewsTests(DomainFactoryMixin, TestCase):
         self.assertContains(response, 'Bob Example')
 
 
+class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
+        self.alice = self.create_athlete('Alice Example')
+        self.bob = self.create_athlete('Bob Example')
+        self.boat = Boat.objects.create(name='Double', rower_seats=2)
+        self.slot = self.create_slot(date=date.today())
+
+    def test_admin_create_booking_starts_with_slot_and_boat_only(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('admin_create_booking'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Scegli Slot e Imbarcazione')
+        self.assertContains(response, 'Slot')
+        self.assertContains(response, 'Imbarcazione')
+        self.assertNotContains(response, 'Rower 1')
+
+    def test_admin_create_booking_valid_selection_loads_seat_form(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            f'{reverse("admin_create_booking")}?slot={self.slot.id}&boat={self.boat.id}',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Completa Equipaggio')
+        self.assertContains(response, 'Rower 1')
+        self.assertContains(response, 'Rower 2')
+
+    def test_admin_create_booking_rejects_already_booked_boat_before_seat_form(self):
+        self.create_booking(boat=self.boat, slot=self.slot, rowers=[self.alice, self.bob])
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            f'{reverse("admin_create_booking")}?slot={self.slot.id}&boat={self.boat.id}',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Double is already booked in this slot.')
+        self.assertNotContains(response, 'Rower 1')
+
+    def test_admin_create_booking_final_phase_creates_booking(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_create_booking'), {
+            'phase': 'crew',
+            'slot': self.slot.id,
+            'boat': self.boat.id,
+            'rower_1': self.alice.id,
+            'rower_2': self.bob.id,
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
+        booking = Booking.objects.get(slot=self.slot, boat=self.boat)
+        self.assertEqual(list(booking.crew.order_by('last_name')), [self.alice, self.bob])
+
+
 class AdminSlotManagementTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
@@ -283,27 +350,52 @@ class AdminSlotManagementTests(TestCase):
         self.assertEqual(Slot.objects.filter(workout=workout).count(), 4)
 
 
-class AdminPasswordFormTests(TestCase):
-    def test_create_user_rejects_short_passwords(self):
-        form = CreateUserForm(data={
-            'username': 'shortpass',
-            'first_name': 'Short',
-            'last_name': 'Pass',
-            'password': 'short',
-            'confirm_password': 'short',
-        })
+class AdminAthleteManagementTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
 
-        self.assertFalse(form.is_valid())
-        self.assertIn('password', form.errors)
+    def test_admin_can_create_athlete_without_creating_user(self):
+        self.client.force_login(self.admin)
 
-    def test_change_password_rejects_short_passwords(self):
-        form = ChangePasswordForm(data={
-            'password': 'short',
-            'confirm_password': 'short',
-        })
+        response = self.client.post(reverse('admin_create_athlete'), {
+            'first_name': 'Mario',
+            'last_name': 'Rossi',
+            'date_of_birth': '2000-01-01',
+            'sex': Athlete.SEX_MALE,
+            'is_active': 'on',
+        }, secure=True)
 
-        self.assertFalse(form.is_valid())
-        self.assertIn('password', form.errors)
+        self.assertRedirects(response, reverse('admin_athletes'), fetch_redirect_response=False)
+        athlete = Athlete.objects.get(last_name='Rossi')
+        self.assertEqual(athlete.first_name, 'Mario')
+        self.assertIsNone(athlete.user)
+        self.assertEqual(User.objects.exclude(pk=self.admin.pk).count(), 0)
+
+    def test_admin_can_edit_athlete_and_link_existing_user(self):
+        user = User.objects.create_user(username='mrossi', first_name='Mario', last_name='Rossi')
+        athlete = Athlete.objects.create(first_name='M.', last_name='Rossi')
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_edit_athlete', args=[athlete.id]), {
+            'first_name': 'Mario',
+            'last_name': 'Rossi',
+            'date_of_birth': '',
+            'sex': '',
+            'is_active': 'on',
+            'user': user.id,
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_athletes'), fetch_redirect_response=False)
+        athlete.refresh_from_db()
+        self.assertEqual(athlete.first_name, 'Mario')
+        self.assertEqual(athlete.user, user)
+
+    def test_legacy_user_creation_route_is_not_available(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get('/admin/users/create/', secure=True)
+
+        self.assertEqual(response.status_code, 404)
 
 
 class LogoutNavigationTests(TestCase):

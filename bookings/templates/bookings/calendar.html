@@ -9,9 +9,9 @@
 <div class="calendar-header">
   <h1>Calendario Prenotazioni</h1>
   <div class="week-nav">
-    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm">Prima</a>
+    <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm"><</a>
     <span class="week-label">{{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}</span>
-    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">Dopo</a>
+    <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">></a>
     {% if week_offset != 0 %}
     <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Oggi</a>
     {% endif %}

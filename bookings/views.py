@@ -5,15 +5,15 @@ import hashlib
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import AdminBookingForm, BookingForm, ChangePasswordForm, CreateUserForm, SlotBatchForm, SlotForm
-from .models import Boat, Booking, Slot
+from .forms import AdminBookingForm, AthleteForm, BookingForm, BookingSelectionForm, SlotBatchForm, SlotForm
+from .models import Athlete, Boat, Booking, Slot
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
 
@@ -204,9 +204,9 @@ def my_bookings(request):
 
 @login_required
 @user_passes_test(is_admin)
-def admin_users(request):
-    athletes = User.objects.filter(is_superuser=False).order_by('username')
-    return render(request, 'bookings/admin_users.html', {
+def admin_athletes(request):
+    athletes = Athlete.objects.select_related('user').order_by('last_name', 'first_name')
+    return render(request, 'bookings/admin_athletes.html', {
         'athletes': athletes,
         'is_admin': True,
     })
@@ -214,38 +214,37 @@ def admin_users(request):
 
 @login_required
 @user_passes_test(is_admin)
-def admin_create_user(request):
+def admin_create_athlete(request):
     if request.method == 'POST':
-        form = CreateUserForm(request.POST)
+        form = AthleteForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, f'Utente "{form.cleaned_data["username"]}" creato.')
-            return redirect('admin_users')
+            athlete = form.save()
+            messages.success(request, f'Atleta "{athlete.full_name}" creato.')
+            return redirect('admin_athletes')
     else:
-        form = CreateUserForm()
-    return render(request, 'bookings/admin_user_form.html', {
+        form = AthleteForm()
+    return render(request, 'bookings/admin_athlete_form.html', {
         'form': form,
-        'title': 'Crea Utente',
+        'title': 'Crea Atleta',
         'is_admin': True,
     })
 
 
 @login_required
 @user_passes_test(is_admin)
-def admin_change_password(request, user_id):
-    athlete = get_object_or_404(User, pk=user_id, is_superuser=False)
+def admin_edit_athlete(request, athlete_id):
+    athlete = get_object_or_404(Athlete, pk=athlete_id)
     if request.method == 'POST':
-        form = ChangePasswordForm(request.POST)
+        form = AthleteForm(request.POST, instance=athlete)
         if form.is_valid():
-            athlete.set_password(form.cleaned_data['password'])
-            athlete.save()
-            messages.success(request, f'Password aggiornata per {athlete.username}.')
-            return redirect('admin_users')
+            athlete = form.save()
+            messages.success(request, f'Atleta "{athlete.full_name}" aggiornato.')
+            return redirect('admin_athletes')
     else:
-        form = ChangePasswordForm()
-    return render(request, 'bookings/admin_user_form.html', {
+        form = AthleteForm(instance=athlete)
+    return render(request, 'bookings/admin_athlete_form.html', {
         'form': form,
-        'title': f'Cambia Password per {athlete.username}',
+        'title': f'Modifica {athlete.full_name}',
         'is_admin': True,
     })
 
@@ -253,12 +252,16 @@ def admin_change_password(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 @require_POST
-def admin_delete_user(request, user_id):
-    athlete = get_object_or_404(User, pk=user_id, is_superuser=False)
-    username = athlete.username
-    athlete.delete()
-    messages.success(request, f'Utente "{username}" eliminato.')
-    return redirect('admin_users')
+def admin_delete_athlete(request, athlete_id):
+    athlete = get_object_or_404(Athlete, pk=athlete_id)
+    label = athlete.full_name
+    try:
+        athlete.delete()
+    except ProtectedError:
+        messages.error(request, f'Non puoi eliminare "{label}" perche ha prenotazioni collegate.')
+    else:
+        messages.success(request, f'Atleta "{label}" eliminato.')
+    return redirect('admin_athletes')
 
 
 @login_required
@@ -374,21 +377,73 @@ def admin_all_bookings(request):
 @user_passes_test(is_admin)
 def admin_create_booking(request):
     if request.method == 'POST':
+        if request.POST.get('phase') == 'select':
+            selection_form = BookingSelectionForm(request.POST)
+            if selection_form.is_valid():
+                slot = selection_form.cleaned_data['slot']
+                boat = selection_form.cleaned_data['boat']
+                return redirect(f'/admin/bookings/create/?slot={slot.pk}&boat={boat.pk}')
+            return render(request, 'bookings/admin_booking_form.html', {
+                'form': selection_form,
+                'phase': 'select',
+                'title': 'Scegli Slot e Imbarcazione',
+                'submit_label': 'Avanti',
+                'is_admin': True,
+            })
+
         form = AdminBookingForm(request.POST, user=request.user)
         if form.is_valid():
             booking = form.save()
             transaction.on_commit(lambda booking=booking: notify_new_booking(booking))
             messages.success(request, f'Prenotazione creata: {booking.boat.name} - {booking.slot}.')
             return redirect('admin_all_bookings')
+        selected_slot = Slot.objects.filter(pk=request.POST.get('slot')).first()
+        selected_boat = Boat.objects.filter(pk=request.POST.get('boat')).first()
+        return render(request, 'bookings/admin_booking_form.html', {
+            'form': form,
+            'phase': 'crew',
+            'title': 'Completa Equipaggio',
+            'submit_label': 'Salva Prenotazione',
+            'selected_slot': selected_slot,
+            'selected_boat': selected_boat,
+            'is_admin': True,
+        })
     else:
-        form = AdminBookingForm(initial={
-            'slot': request.GET.get('slot'),
-            'boat': request.GET.get('boat'),
-        }, user=request.user)
+        selected_slot = request.GET.get('slot')
+        selected_boat = request.GET.get('boat')
+        if selected_slot and selected_boat:
+            selection_form = BookingSelectionForm(request.GET)
+            if selection_form.is_valid():
+                slot = selection_form.cleaned_data['slot']
+                boat = selection_form.cleaned_data['boat']
+                form = AdminBookingForm(initial={
+                    'slot': slot.pk,
+                    'boat': boat.pk,
+                }, user=request.user)
+                return render(request, 'bookings/admin_booking_form.html', {
+                    'form': form,
+                    'phase': 'crew',
+                    'title': 'Completa Equipaggio',
+                    'submit_label': 'Salva Prenotazione',
+                    'selected_slot': slot,
+                    'selected_boat': boat,
+                    'is_admin': True,
+                })
+            return render(request, 'bookings/admin_booking_form.html', {
+                'form': selection_form,
+                'phase': 'select',
+                'title': 'Scegli Slot e Imbarcazione',
+                'submit_label': 'Avanti',
+                'is_admin': True,
+            })
+
+        form = BookingSelectionForm()
 
     return render(request, 'bookings/admin_booking_form.html', {
         'form': form,
-        'title': 'Crea Prenotazione',
+        'phase': 'select',
+        'title': 'Scegli Slot e Imbarcazione',
+        'submit_label': 'Avanti',
         'is_admin': True,
     })
 

@@ -12,8 +12,8 @@ class Athlete(models.Model):
     SEX_OTHER = 'O'
 
     SEX_CHOICES = [
-        (SEX_MALE, 'Maschile'),
-        (SEX_FEMALE, 'Femminile'),
+        (SEX_MALE, 'Maschio'),
+        (SEX_FEMALE, 'Femmina'),
         (SEX_OTHER, 'Altro'),
     ]
 
@@ -50,10 +50,10 @@ class Athlete(models.Model):
             age -= 1
         if age < 14:
             return 'U14'
-        if age < 16:
-            return 'U16'
-        if age < 18:
-            return 'U18'
+        if age < 17:
+            return 'U17'
+        if age < 19:
+            return 'U19'
         if age < 23:
             return 'U23'
         if age >= 27:
@@ -86,13 +86,13 @@ class SlotBatch(models.Model):
     SUNDAY = 6
 
     DAY_CHOICES = [
-        (MONDAY, "Lunedì"),
-        (TUESDAY, "Martedì"),
-        (WEDNESDAY, "Mercoledì"),
-        (THURSDAY, "Giovedì"),
-        (FRIDAY, "Venerdì"),
-        (SATURDAY, "Sabato"),
-        (SUNDAY, "Domenica"),
+        (MONDAY, 'Lunedi'),
+        (TUESDAY, 'Martedi'),
+        (WEDNESDAY, 'Mercoledi'),
+        (THURSDAY, 'Giovedi'),
+        (FRIDAY, 'Venerdi'),
+        (SATURDAY, 'Sabato'),
+        (SUNDAY, 'Domenica'),
     ]
 
     day_of_week = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
@@ -153,11 +153,11 @@ class Slot(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["day_of_week", "start_time"]
+        ordering = ['date', 'start_time']
         constraints = [
             models.UniqueConstraint(
-                fields=["day_of_week", "start_time", "end_time"],
-                name="unique_bookable_slot",
+                fields=['date', 'start_time', 'end_time'],
+                name='unique_slot_interval',
             ),
         ]
 
@@ -177,49 +177,19 @@ class Slot(models.Model):
 
 
 class Boat(models.Model):
-    CATEGORY_SINGLE_COASTAL = "1xC"
-    CATEGORY_DOUBLE_COASTAL = "2xC"
-    CATEGORY_DOUBLE = "2x"
-    CATEGORY_QUAD = "4x"
-    CATEGORY_COXED_FOUR = "4+"
-
-    CATEGORY_CHOICES = [
-        (CATEGORY_SINGLE_COASTAL, "1xC"),
-        (CATEGORY_DOUBLE_COASTAL, "2xC"),
-        (CATEGORY_DOUBLE, "2x"),
-        (CATEGORY_QUAD, "4x"),
-        (CATEGORY_COXED_FOUR, "4+"),
-    ]
-
     name = models.CharField(max_length=100)
-    category = models.CharField(
-        max_length=10, choices=CATEGORY_CHOICES, default=CATEGORY_SINGLE_COASTAL
-    )
-    seats = models.PositiveSmallIntegerField(
-        default=1, validators=[MinValueValidator(1)]
-    )
+    rower_seats = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1)])
+    requires_cox = models.BooleanField(default=False)
     description = models.TextField(blank=True)
-    color = models.CharField(
-        max_length=7, default="#2196F3", help_text="Hex color for calendar display"
-    )
-
-    def __str__(self):
-        return f"{self.name} ({self.category})"
+    color = models.CharField(max_length=7, default='#2196F3', help_text='Hex color for calendar display')
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ['name']
 
-
-class Booking(models.Model):
-    boat = models.ForeignKey(Boat, on_delete=models.CASCADE, related_name="bookings")
-    athlete = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings")
-    date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["date", "start_time"]
+    @property
+    def total_crew_size(self):
+        return self.rower_seats + (1 if self.requires_cox else 0)
 
     def __str__(self):
         suffix = '+' if self.requires_cox else 'x'

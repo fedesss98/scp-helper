@@ -58,10 +58,7 @@ boats_data = [
 
 for data in boats_data:
     boat, created = Boat.objects.get_or_create(name=data["name"], defaults=data)
-    print(f"{'Created' if created else 'Already exists'}: {boat.name}")
-
-# ── Create weekly bookable slots ─────────────────────────────────────────────
-DEFAULT_SLOT_MINUTES = 90
+    print(f"{'Created' if created else 'Already exists'} boat: {boat.name}")
 
 
 def month_range(start):
