@@ -1,6 +1,6 @@
 {% for booking in bookings %}
 <tr class="{% if is_past %}past-row{% endif %}">
-  <td>{% if is_past %}{{ booking.slot.date|date:"D, d M Y" }}{% else %}<strong>{{ booking.slot.date|date:"D, d M Y" }}</strong>{% endif %}</td>
+  <td>{% if is_past %}{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}{% else %}<strong>{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}</strong>{% endif %}</td>
   <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>
   <td>{{ booking.boat.name }}</td>
   <td>{% include "bookings/partials/shared_boat_badges.html" with bookings=booking.crew.all only %}</td>

@@ -13,7 +13,7 @@
   {% for group in slot_groups %}
   <section class="slot-group">
     <header class="slot-group-head">
-      <h2>{{ group.label|date:"D, d M Y" }}</h2>
+      <h2>{{ group.label|it_day_abbr }}, {{ group.label|ddmmyyyy }}</h2>
       <span class="slot-count">{{ group.slots|length }} slot{{ group.slots|length|pluralize }}</span>
     </header>
 

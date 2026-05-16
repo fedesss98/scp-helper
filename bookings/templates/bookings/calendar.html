@@ -10,7 +10,7 @@
   <h1>Calendario Prenotazioni</h1>
   <div class="week-nav">
     <a href="/calendar/?week={{ week_offset|add:'-1' }}" class="btn btn-ghost btn-sm"><</a>
-    <span class="week-label">{{ week_days.0|date:"d M" }} - {{ week_days.6|date:"d M Y" }}</span>
+    <span class="week-label">{{ week_days.0|date:"d/m" }} - {{ week_days.6|date:"d/m/Y" }}</span>
     <a href="/calendar/?week={{ week_offset|add:'1' }}" class="btn btn-ghost btn-sm">></a>
     {% if week_offset != 0 %}
     <a href="/calendar/?week=0" class="btn btn-ghost btn-sm">Oggi</a>
@@ -23,8 +23,8 @@
   <section class="day-panel {% if section.date == today %}day-panel-today{% endif %}">
     <header class="day-heading">
       <div class="day-title">
-        <span class="day-name">{{ section.date|date:"l" }}</span>
-        <span class="day-date">{{ section.date|date:"d M Y" }}</span>
+        <span class="day-name">{{ section.date|it_day_abbr }}</span>
+        <span class="day-date">{{ section.date|ddmmyyyy }}</span>
       </div>
       {% if section.date == today %}
       <span class="today-badge">Oggi</span>

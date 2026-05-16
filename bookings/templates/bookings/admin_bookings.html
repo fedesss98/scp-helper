@@ -27,9 +27,9 @@
       <tr>
         <td><strong>{{ booking.crew_names }}</strong></td>
         <td>{{ booking.boat.name }}</td>
-        <td>{{ booking.slot.date|date:"D, d M Y" }}</td>
+        <td>{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}</td>
         <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>
-        <td class="muted small-text">{{ booking.created_at|date:"d M H:i" }}</td>
+        <td class="muted small-text">{{ booking.created_at|date:"d/m H:i" }}</td>
         <td>
           <div class="booking-actions">
             <a href="{% url 'admin_edit_booking' booking.id %}" class="btn btn-ghost btn-sm">Modifica</a>
