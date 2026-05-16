@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, Workout
+from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, SlotBatchSlot, Workout
 
 
 @admin.register(Athlete)
@@ -21,6 +21,12 @@ class WorkoutAdmin(admin.ModelAdmin):
 class SlotBatchAdmin(admin.ModelAdmin):
     list_display = ['day_of_week', 'start_date', 'end_date', 'start_time', 'end_time', 'workout']
     list_filter = ['day_of_week', 'workout']
+
+
+@admin.register(SlotBatchSlot)
+class SlotBatchSlotAdmin(admin.ModelAdmin):
+    list_display = ['batch', 'slot', 'created_at']
+    list_filter = ['batch__day_of_week', 'slot__date']
 
 
 @admin.register(Slot)

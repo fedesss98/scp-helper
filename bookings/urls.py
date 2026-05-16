@@ -17,6 +17,7 @@ urlpatterns = [
     path('admin/athletes/<int:athlete_id>/delete/', views.admin_delete_athlete, name='admin_delete_athlete'),
     path('admin/slots/', views.admin_slots, name='admin_slots'),
     path('admin/slots/create/', views.admin_create_slot, name='admin_create_slot'),
+    path('admin/slots/batches/<int:batch_id>/edit/', views.admin_edit_slot_batch, name='admin_edit_slot_batch'),
     path('admin/slots/<int:slot_id>/edit/', views.admin_edit_slot, name='admin_edit_slot'),
     path('admin/slots/<int:slot_id>/toggle/', views.admin_toggle_slot, name='admin_toggle_slot'),
     path('admin/slots/<int:slot_id>/delete/', views.admin_delete_slot, name='admin_delete_slot'),

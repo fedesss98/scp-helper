@@ -5,7 +5,7 @@ A simple Django web app for managing rowing club slots, workouts, boats, athlete
 ## Features
 
 - Athletes can browse a weekly calendar and book/cancel complete boat crews.
-- Admin users can create users, link users to athlete profiles, create slots in batch, and manage bookings.
+- Admin users can create athletes, create slots in batch, and manage bookings.
 - Slots are concrete date/time intervals, optionally linked to a reusable workout.
 - Boats have rower seats and can optionally require a cox.
 - Bookings reserve one boat for one slot and must include the full crew.
@@ -63,7 +63,7 @@ Open http://localhost:8000 and log in as `admin`.
 ## Domain Model
 
 - `Athlete`: sports identity with full name, optional date of birth, sex, active flag, and optional linked Django user.
-- `User`: login identity and permissions. Creating a user can also create/link an athlete profile.
+- `User`: login identity and permissions, created from Django's built-in admin panel.
 - `Workout`: reusable text label/description such as `S&C` or `4x3000 rest 10'`.
 - `Slot`: concrete date/time interval, optionally linked to one workout.
 - `SlotBatch`: helper record used to generate concrete slots for repeated weekdays.
@@ -73,17 +73,19 @@ Open http://localhost:8000 and log in as `admin`.
 
 ## Admin Tasks
 
-### Create a user and athlete link
+### Create athletes
 1. Log in as admin.
-2. Go to **Utenti** in the nav.
-3. Click **+ Aggiungi Utente**.
-4. Either link an existing athlete or leave the athlete field empty to create one from the user's name.
-5. Use the Staff checkbox for admin privileges.
+2. Go to **Atleti** in the nav.
+3. Click **+ Aggiungi Atleta**.
+4. Fill in the athlete details.
+5. Optionally link an existing user that was already created in Django admin.
+
+User accounts and staff permissions are managed only from Django's built-in admin panel at `/django-admin/`.
 
 ### Create slots
 Use **Slot** in the app nav. You can create a single concrete slot or use the batch form to generate every selected weekday over a date range.
 
-### Manage workouts, boats, and standalone athletes
+### Manage workouts, boats, and users
 Use Django's built-in admin panel at `/django-admin/`.
 
 ---

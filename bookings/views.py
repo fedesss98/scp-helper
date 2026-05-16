@@ -12,8 +12,16 @@ from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import AdminBookingForm, AthleteForm, BookingForm, BookingSelectionForm, SlotBatchForm, SlotForm
-from .models import Athlete, Boat, Booking, Slot
+from .forms import (
+    AdminBookingForm,
+    AthleteForm,
+    BookingForm,
+    BookingSelectionForm,
+    SlotBatchEditForm,
+    SlotBatchForm,
+    SlotForm,
+)
+from .models import Athlete, Boat, Booking, Slot, SlotBatch
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
 
@@ -267,7 +275,7 @@ def admin_delete_athlete(request, athlete_id):
 @login_required
 @user_passes_test(is_admin)
 def admin_slots(request):
-    slots = Slot.objects.select_related('workout').order_by('date', 'start_time', 'end_time')
+    slots = Slot.objects.select_related('workout', 'batch').order_by('date', 'start_time', 'end_time')
     slots_by_day = defaultdict(list)
     for slot in slots:
         slots_by_day[slot.date].append(slot)
@@ -336,6 +344,45 @@ def admin_edit_slot(request, slot_id):
     return render(request, 'bookings/admin_slot_form.html', {
         'form': form,
         'title': f'Modifica {slot}',
+        'is_admin': True,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_edit_slot_batch(request, batch_id):
+    batch = get_object_or_404(SlotBatch, pk=batch_id)
+    linked_slots = Slot.objects.filter(batch_link__batch=batch).select_related('workout').order_by('date', 'start_time')
+
+    if request.method == 'POST':
+        form = SlotBatchEditForm(request.POST, batch=batch)
+        if form.is_valid():
+            start_time = form.cleaned_data['start_time']
+            end_time = form.cleaned_data['end_time']
+            linked_dates = linked_slots.values_list('date', flat=True)
+            conflicts = Slot.objects.filter(
+                date__in=linked_dates,
+                start_time=start_time,
+                end_time=end_time,
+            ).exclude(batch_link__batch=batch)
+            if conflicts.exists():
+                form.add_error(None, 'Uno o piu slot esistono gia con questi orari.')
+            else:
+                updated = batch.update_linked_slots(
+                    start_time=start_time,
+                    end_time=end_time,
+                    workout=form.cleaned_data['workout'],
+                    is_active=form.cleaned_data['is_active'],
+                )
+                messages.success(request, f'Aggiornati {updated} slot del batch.')
+                return redirect('admin_slots')
+    else:
+        form = SlotBatchEditForm(batch=batch)
+
+    return render(request, 'bookings/admin_slot_form.html', {
+        'form': form,
+        'title': f'Modifica batch {batch}',
+        'linked_slots': linked_slots,
         'is_admin': True,
     })
 

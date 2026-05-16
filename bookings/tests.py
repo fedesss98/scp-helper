@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .forms import AthleteForm, BookingForm, SlotBatchForm, SlotForm
-from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, Workout
+from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch, SlotBatchSlot, Workout
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
 
@@ -61,10 +61,37 @@ class SlotBatchTests(TestCase):
         created_slots = batch.create_slots()
 
         self.assertEqual(len(created_slots), 4)
+        self.assertEqual(SlotBatchSlot.objects.filter(batch=batch).count(), 4)
         self.assertTrue(Slot.objects.filter(date=date(2026, 6, 3), workout=workout).exists())
         self.assertTrue(all(slot.start_time == time(11, 0) for slot in created_slots))
 
+    def test_batch_updates_linked_slots_together(self):
+        workout = Workout.objects.create(name='Tecnica')
+        updated_workout = Workout.objects.create(name='Sprint')
+        batch = SlotBatch.objects.create(
+            day_of_week=SlotBatch.WEDNESDAY,
+            start_date=date(2026, 6, 1),
+            end_date=date(2026, 6, 30),
+            start_time=time(11, 0),
+            end_time=time(13, 0),
+            workout=workout,
+        )
+        batch.create_slots()
 
+<<<<<<< HEAD
+=======
+        updated = batch.update_linked_slots(
+            start_time=time(12, 0),
+            end_time=time(14, 0),
+            workout=updated_workout,
+            is_active=False,
+        )
+
+        self.assertEqual(updated, 4)
+        self.assertEqual(Slot.objects.filter(start_time=time(12, 0), workout=updated_workout, is_active=False).count(), 4)
+
+
+>>>>>>> athlete-date-format-it
 class SlotTimeFormTests(TestCase):
     def test_slot_forms_use_24_hour_selects_for_times(self):
         for form in (SlotForm(), SlotBatchForm()):
@@ -83,7 +110,11 @@ class AthleteFormTests(TestCase):
         form = AthleteForm(data={
             'first_name': 'Mario',
             'last_name': 'Rossi',
+<<<<<<< HEAD
             'date_of_birth': '2000-01-01',
+=======
+            'date_of_birth': '01/01/2000',
+>>>>>>> athlete-date-format-it
             'sex': Athlete.SEX_MALE,
             'is_active': 'on',
         })
@@ -92,10 +123,26 @@ class AthleteFormTests(TestCase):
         athlete = form.save()
 
         self.assertEqual(athlete.full_name, 'Mario Rossi')
+<<<<<<< HEAD
+=======
+        self.assertEqual(athlete.date_of_birth, date(2000, 1, 1))
+>>>>>>> athlete-date-format-it
         self.assertEqual(athlete.sex, Athlete.SEX_MALE)
         self.assertIsNone(athlete.user)
         self.assertEqual(User.objects.count(), 0)
 
+<<<<<<< HEAD
+=======
+    def test_athlete_form_renders_date_of_birth_in_italian_format(self):
+        athlete = Athlete(first_name='Mario', last_name='Rossi', date_of_birth=date(2000, 1, 31))
+        form = AthleteForm(instance=athlete)
+        rendered_field = str(form['date_of_birth'])
+
+        self.assertIn('value="31/01/2000"', rendered_field)
+        self.assertIn('placeholder="dd/mm/yyyy"', rendered_field)
+        self.assertNotIn('type="date"', rendered_field)
+
+>>>>>>> athlete-date-format-it
     def test_athlete_form_can_link_existing_user(self):
         user = User.objects.create_user(username='coach', first_name='Alice', last_name='Bianchi')
         form = AthleteForm(data={
@@ -349,7 +396,21 @@ class AdminSlotManagementTests(TestCase):
         self.assertRedirects(response, reverse('admin_slots'), fetch_redirect_response=False)
         self.assertEqual(Slot.objects.filter(workout=workout).count(), 4)
 
+    def test_admin_can_edit_batch_slots(self):
+        workout = Workout.objects.create(name='Tecnica')
+        updated_workout = Workout.objects.create(name='Sprint')
+        batch = SlotBatch.objects.create(
+            day_of_week=SlotBatch.WEDNESDAY,
+            start_date=date(2026, 6, 1),
+            end_date=date(2026, 6, 30),
+            start_time=time(11, 0),
+            end_time=time(13, 0),
+            workout=workout,
+        )
+        batch.create_slots()
+        self.client.force_login(self.admin)
 
+<<<<<<< HEAD
 class AdminAthleteManagementTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
@@ -368,6 +429,40 @@ class AdminAthleteManagementTests(TestCase):
         self.assertRedirects(response, reverse('admin_athletes'), fetch_redirect_response=False)
         athlete = Athlete.objects.get(last_name='Rossi')
         self.assertEqual(athlete.first_name, 'Mario')
+=======
+        response = self.client.post(reverse('admin_edit_slot_batch', args=[batch.id]), {
+            'start_time': '12:00',
+            'end_time': '14:00',
+            'workout': updated_workout.id,
+            'is_active': '',
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_slots'), fetch_redirect_response=False)
+        self.assertEqual(Slot.objects.filter(batch_link__batch=batch, start_time=time(12, 0)).count(), 4)
+        self.assertEqual(Slot.objects.filter(batch_link__batch=batch, workout=updated_workout).count(), 4)
+        self.assertEqual(Slot.objects.filter(batch_link__batch=batch, is_active=False).count(), 4)
+
+
+class AdminAthleteManagementTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username='admin', email='', password='password123')
+
+    def test_admin_can_create_athlete_without_creating_user(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_create_athlete'), {
+            'first_name': 'Mario',
+            'last_name': 'Rossi',
+            'date_of_birth': '01/01/2000',
+            'sex': Athlete.SEX_MALE,
+            'is_active': 'on',
+        }, secure=True)
+
+        self.assertRedirects(response, reverse('admin_athletes'), fetch_redirect_response=False)
+        athlete = Athlete.objects.get(last_name='Rossi')
+        self.assertEqual(athlete.first_name, 'Mario')
+        self.assertEqual(athlete.date_of_birth, date(2000, 1, 1))
+>>>>>>> athlete-date-format-it
         self.assertIsNone(athlete.user)
         self.assertEqual(User.objects.exclude(pk=self.admin.pk).count(), 0)
 
