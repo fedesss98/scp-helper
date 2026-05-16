@@ -48,7 +48,7 @@ class AthleteForm(forms.ModelForm):
         queryset=User.objects.none(),
         required=False,
         label='Utente collegato (opzionale)',
-        help_text='Gli utenti si creano dal pannello admin Django; qui puoi solo collegarne uno esistente.',
+        help_text='Qui puoi solo collegare un utente esistente, per la crezione di un nuovo utente rivolgiti all\'admin.',
     )
 
     class Meta:
