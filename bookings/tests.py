@@ -233,6 +233,7 @@ class BookingCrewValidationTests(DomainFactoryMixin, TestCase):
         }
         form = BookingForm(data=payload, user=self.user)
 
+        self.assertEqual(form.fields['cox'].label, 'Timoniere')
         self.assertTrue(form.is_valid(), form.errors)
         booking = form.save()
 

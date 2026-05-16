@@ -254,7 +254,7 @@ class BookingForm(forms.ModelForm):
             self.fields['cox'] = forms.ModelChoiceField(
                 queryset=active_athletes(),
                 required=True,
-                label='Cox',
+                label='Timoniere',
                 initial=initial_cox,
             )
 
