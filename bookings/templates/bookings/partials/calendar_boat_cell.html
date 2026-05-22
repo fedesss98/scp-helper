@@ -10,8 +10,8 @@
   {% if section.date < today %}
     {% if booking %}
     <div class="booking-names">
-      {% for athlete in booking.crew.all %}
-      <span class="taken-name">{{ athlete.full_name }}</span>
+      {% for crew_member in booking.crew_members %}
+      <span class="taken-name"><span class="crew-seat-label">{{ crew_member.seat_label }}</span> {{ crew_member.athlete.full_name }}</span>
       {% endfor %}
     </div>
     {% else %}
@@ -26,8 +26,8 @@
         <span class="booked-label">Prenotato</span>
         {% endif %}
         <div class="booking-names booking-names-spaced">
-          {% for athlete in booking.crew.all %}
-          <span class="taken-name">{{ athlete.full_name }}</span>
+          {% for crew_member in booking.crew_members %}
+          <span class="taken-name"><span class="crew-seat-label">{{ crew_member.seat_label }}</span> {{ crew_member.athlete.full_name }}</span>
           {% endfor %}
         </div>
       </div>

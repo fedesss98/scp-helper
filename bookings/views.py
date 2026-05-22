@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.db import transaction
+from django.db.models import Prefetch
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -21,7 +22,7 @@ from .forms import (
     SlotBatchForm,
     SlotForm,
 )
-from .models import Athlete, Boat, Booking, Slot, SlotBatch
+from .models import Athlete, Boat, Booking, BookingCrewMember, Slot, SlotBatch
 from .notifications import notify_booking_event, notify_new_booking, snapshot_booking
 
 
@@ -90,7 +91,16 @@ def get_user_athlete(user):
 
 
 def booking_queryset():
-    return Booking.objects.select_related('slot', 'boat', 'created_by').prefetch_related('crew')
+    ordered_crew_links = BookingCrewMember.objects.select_related('athlete').order_by(
+        'role',
+        'seat_number',
+        'athlete__last_name',
+        'athlete__first_name',
+    )
+    return Booking.objects.select_related('slot', 'boat', 'created_by').prefetch_related(
+        'crew',
+        Prefetch('crew_links', queryset=ordered_crew_links, to_attr='ordered_crew_links'),
+    )
 
 
 def build_day_sections(week_days):

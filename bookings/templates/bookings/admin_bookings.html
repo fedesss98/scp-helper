@@ -25,7 +25,7 @@
     <tbody>
       {% for booking in bookings %}
       <tr>
-        <td><strong>{{ booking.crew_names }}</strong></td>
+        <td><strong>{{ booking.crew_names_with_seats }}</strong></td>
         <td>{{ booking.boat.name }}</td>
         <td>{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}</td>
         <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>

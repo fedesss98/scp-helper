@@ -239,6 +239,16 @@ class BookingCrewValidationTests(DomainFactoryMixin, TestCase):
 
         self.assertEqual(booking.crew.count(), 5)
         self.assertEqual(booking.cox(), self.cox)
+        self.assertEqual(
+            [member.display_name for member in booking.crew_members()],
+            [
+                '1 Alice Example',
+                '2 Bob Example',
+                '3 Cara Example',
+                '4 Dan Example',
+                'Tim. Cox Example',
+            ],
+        )
 
 
 @override_settings(
@@ -368,8 +378,8 @@ class BookingViewsTests(DomainFactoryMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Tuo')
-        self.assertContains(response, 'Alice Example')
-        self.assertContains(response, 'Bob Example')
+        self.assertContains(response, '1</span> Alice Example')
+        self.assertContains(response, '2</span> Bob Example')
 
     def test_my_bookings_shows_complete_crew(self):
         self.client.force_login(self.user)
@@ -378,7 +388,18 @@ class BookingViewsTests(DomainFactoryMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Equipaggio')
-        self.assertContains(response, 'Bob Example')
+        self.assertContains(response, '2</span> Bob Example')
+
+    def test_calendar_shows_cox_with_tim_label(self):
+        cox = self.create_athlete('Cox Example')
+        coxed_boat = Boat.objects.create(name='Coxed Double', rower_seats=2, requires_cox=True)
+        self.create_booking(boat=coxed_boat, slot=self.slot, rowers=[self.alice, self.bob], cox=cox)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('calendar'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tim.</span> Cox Example')
 
 
 class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
@@ -440,6 +461,16 @@ class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
         self.assertRedirects(response, reverse('admin_all_bookings'), fetch_redirect_response=False)
         booking = Booking.objects.get(slot=self.slot, boat=self.boat)
         self.assertEqual(list(booking.crew.order_by('last_name')), [self.alice, self.bob])
+        self.assertEqual(booking.crew_names_with_seats(), '1 Alice Example, 2 Bob Example')
+
+    def test_admin_bookings_show_ordered_seat_labels(self):
+        self.create_booking(boat=self.boat, slot=self.slot, rowers=[self.bob, self.alice])
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse('admin_all_bookings'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1 Bob Example, 2 Alice Example')
 
 
 class AdminSlotManagementTests(TestCase):

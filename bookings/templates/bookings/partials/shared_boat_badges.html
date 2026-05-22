@@ -1,6 +1,6 @@
-{% if bookings %}
-  {% for athlete in bookings %}
-  <span class="badge">{{ athlete.full_name }}</span>
+{% if crew_members %}
+  {% for crew_member in crew_members %}
+  <span class="badge"><span class="crew-seat-label">{{ crew_member.seat_label }}</span> {{ crew_member.athlete.full_name }}</span>
   {% endfor %}
 {% else %}
   <span class="muted">-</span>

@@ -4,7 +4,7 @@
   <td>{% if is_past %}{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}{% else %}<strong>{{ booking.slot.date|it_day_abbr }}, {{ booking.slot.date|ddmmyyyy }}</strong>{% endif %}</td>
   <td>{{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</td>
   <td>{{ booking.boat.name }}</td>
-  <td>{% include "bookings/partials/shared_boat_badges.html" with bookings=booking.crew.all only %}</td>
+  <td>{% include "bookings/partials/shared_boat_badges.html" with crew_members=booking.crew_members only %}</td>
   {% if show_cancel %}
   <td>
     <form method="post" action="/cancel/{{ booking.id }}/" class="inline-form">

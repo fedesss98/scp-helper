@@ -57,4 +57,4 @@ class BookingAdmin(admin.ModelAdmin):
 
     @admin.display(description='Crew')
     def crew_summary(self, obj):
-        return obj.crew_names()
+        return obj.crew_names_with_seats()

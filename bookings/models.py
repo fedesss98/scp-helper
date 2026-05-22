@@ -259,7 +259,18 @@ class Booking(models.Model):
         return self.slot.end_time
 
     def crew_members(self):
-        return self.crew_links.select_related('athlete').order_by('role', 'seat_number', 'athlete__last_name')
+        links = getattr(self, 'ordered_crew_links', None)
+        if links is None:
+            links = self.crew_links.select_related('athlete')
+        return sorted(
+            links,
+            key=lambda link: (
+                1 if link.role == BookingCrewMember.ROLE_COX else 0,
+                link.seat_number if link.seat_number is not None else 9999,
+                link.athlete.last_name,
+                link.athlete.first_name,
+            ),
+        )
 
     def rowers(self):
         return [link.athlete for link in self.crew_members() if link.role == BookingCrewMember.ROLE_ROWER]
@@ -269,7 +280,10 @@ class Booking(models.Model):
         return link.athlete if link else None
 
     def crew_names(self):
-        return ', '.join(athlete.full_name for athlete in self.crew.all())
+        return ', '.join(link.athlete.full_name for link in self.crew_members())
+
+    def crew_names_with_seats(self):
+        return ', '.join(link.display_name for link in self.crew_members())
 
     def __str__(self):
         return f'{self.boat.name} on {self.slot}'
@@ -299,3 +313,15 @@ class BookingCrewMember(models.Model):
     def __str__(self):
         seat = f' #{self.seat_number}' if self.seat_number else ''
         return f'{self.athlete} as {self.role}{seat}'
+
+    @property
+    def seat_label(self):
+        if self.role == self.ROLE_COX:
+            return 'Tim.'
+        if self.seat_number:
+            return str(self.seat_number)
+        return '-'
+
+    @property
+    def display_name(self):
+        return f'{self.seat_label} {self.athlete.full_name}'

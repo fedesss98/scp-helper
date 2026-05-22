@@ -221,6 +221,10 @@
   font-weight: 600;
 }
 
+.taken-name .crew-seat-label {
+  color: var(--text);
+}
+
 .booked-label {
   padding: 0.2rem 0.55rem;
   background: #fffbeb;
