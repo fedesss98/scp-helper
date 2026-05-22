@@ -246,7 +246,7 @@ class BookingForm(forms.ModelForm):
             self.fields[f'rower_{seat}'] = forms.ModelChoiceField(
                 queryset=active_athletes(),
                 required=True,
-                label=f'Rower {seat}',
+                label=f'Carrello {seat}',
                 initial=rower_initial_by_seat.get(seat),
             )
 
