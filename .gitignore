@@ -50,6 +50,9 @@ media/
 !.vscode/tasks.json
 !.vscode/launch.json
 
+# Zed
+.zed/
+
 # Jupyter
 .ipynb_checkpoints/
 .virtual_documents/
