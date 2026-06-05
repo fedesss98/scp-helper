@@ -1,0 +1,109 @@
+.program-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.program-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.8rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.program-tab:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.program-tab.active {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: var(--brand-strong);
+}
+
+.program-tab span {
+  min-width: 1.35rem;
+  padding: 0.08rem 0.38rem;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.program-note {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.race-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.race-table-scroll table {
+  min-width: 560px;
+  table-layout: fixed;
+}
+
+.race-table-scroll th,
+.race-table-scroll td {
+  vertical-align: top;
+}
+
+.race-table-scroll .crew-cell {
+  width: 34%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.race-table-scroll th:not(.crew-cell),
+.race-table-scroll td:not(.crew-cell) {
+  white-space: nowrap;
+}
+
+.race-table-scroll td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.race-table-scroll td.crew-cell {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+tr.program-row-target td {
+  background: #fffbeb;
+  border-bottom-color: #fde68a;
+}
+
+tr.program-row-target:hover td {
+  background: #fef3c7;
+}
+
+.program-club-badge {
+  margin-left: 0.4rem;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 760px) {
+  .program-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

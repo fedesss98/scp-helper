@@ -7,5 +7,6 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('login/', ThrottledLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('races/', include('races.urls')),
     path('', include('bookings.urls')),
 ]
