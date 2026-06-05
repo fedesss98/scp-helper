@@ -419,7 +419,7 @@ class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
         self.assertContains(response, 'Scegli Slot e Imbarcazione')
         self.assertContains(response, 'Slot')
         self.assertContains(response, 'Imbarcazione')
-        self.assertNotContains(response, 'Rower 1')
+        self.assertNotContains(response, 'Carrello 1')
 
     def test_admin_create_booking_valid_selection_loads_seat_form(self):
         self.client.force_login(self.admin)
@@ -431,8 +431,8 @@ class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Completa Equipaggio')
-        self.assertContains(response, 'Rower 1')
-        self.assertContains(response, 'Rower 2')
+        self.assertContains(response, 'Carrello 1')
+        self.assertContains(response, 'Carrello 2')
 
     def test_admin_create_booking_rejects_already_booked_boat_before_seat_form(self):
         self.create_booking(boat=self.boat, slot=self.slot, rowers=[self.alice, self.bob])
@@ -445,7 +445,7 @@ class AdminBookingCreateFlowTests(DomainFactoryMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Double is already booked in this slot.')
-        self.assertNotContains(response, 'Rower 1')
+        self.assertNotContains(response, 'Carrello 1')
 
     def test_admin_create_booking_final_phase_creates_booking(self):
         self.client.force_login(self.admin)
