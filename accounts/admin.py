@@ -11,6 +11,11 @@ class UserProfileInline(admin.StackedInline):
     extra = 0
     fields = ['telegram_chat_id', 'telegram_username', 'phone']
 
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj and not hasattr(obj, 'profile'):
+            return 1
+        return 0
+
 
 try:
     admin.site.unregister(User)
