@@ -1,6 +1,8 @@
-# Rowing Club Booking App
+# VogApp Rowing Club App
 
-A simple Django web app for managing rowing club slots, workouts, boats, athletes, and complete-crew bookings.
+A Django web app for managing rowing club slots, workouts, boats, athletes,
+complete-crew bookings, regatta calendars, race results, and Telegram result
+notifications.
 
 ## Features
 
@@ -9,7 +11,15 @@ A simple Django web app for managing rowing club slots, workouts, boats, athlete
 - Slots are concrete date/time intervals, optionally linked to a reusable workout.
 - Boats have rower seats and can optionally require a cox.
 - Bookings reserve one boat for one slot and must include the full crew.
+- Logged-in users can browse upcoming regattas under **Regate**.
+- Race detail pages default to **Programma SCP**, showing only races with at least one `PALERMO SC` crew and highlighting that crew row.
+- Users can switch to **Programma Completo** to see the full saved race program.
+- Users can subscribe/unsubscribe to race result notifications from the web UI.
+- Race calendar, program, and result data is scraped from canottaggioservice.canottaggio.net into the Django database.
+- A worker process polls subscribed upcoming races and sends Telegram notifications when new results appear.
 - No self-registration: admin users control accounts.
+
+See [MERGE_CHANGES.md](MERGE_CHANGES.md) for the scraper/API/bot merge notes.
 
 ---
 
@@ -32,9 +42,8 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-If you are upgrading from the previous prototype schema, recreate the local
-database first because the booking models were intentionally redesigned
-destructively.
+This creates the booking tables plus the new `accounts`, `races`, and
+`notifications` app tables.
 
 ### 4. Create starter data + admin user
 ```bash
@@ -58,6 +67,29 @@ python manage.py runserver
 
 Open http://localhost:8000 and log in as `admin`.
 
+### 6. Load race data
+```bash
+python manage.py scrape_races
+```
+
+The command syncs the current season calendar and hydrates upcoming races with
+program/results when available. Useful options:
+
+- `--season 2026`: scrape a specific FIC season.
+- `--skip-program`: sync calendar/results only.
+- `--skip-results`: sync calendar/program only.
+- `--all`: hydrate past races too.
+- `--limit 10`: hydrate only the first 10 races after calendar sync.
+
+### 7. Run the Telegram worker
+```bash
+python bot/run_bot.py
+```
+
+The worker uses Django ORM data and polls subscribed upcoming races every 180
+seconds by default. Set `TELEGRAM_BOT_TOKEN` to enable Telegram sends and command
+handlers.
+
 ---
 
 ## Domain Model
@@ -70,6 +102,45 @@ Open http://localhost:8000 and log in as `admin`.
 - `Boat`: boat name, rower seat count, optional cox requirement, color, and active flag.
 - `Booking`: one boat in one slot with a complete crew.
 - `BookingCrewMember`: through model for booking crew, preserving rower seats and cox role.
+- `UserProfile`: one-to-one profile for each Django user, including Telegram chat/user details and phone.
+- `Race`: one canottaggioservice regatta, keyed by unique `external_id`.
+- `RaceResult`: one published finisher/result row, keyed by unique `external_id` for idempotent sync.
+- `RaceSubscription`: many-to-one user subscriptions to races, unique per `(user, race)`.
+
+## Race Scraping and Notifications
+
+Race scraping now lives in the Django project:
+
+- `races/scraper.py`: framework-free scraper functions/classes extracted from the old FastAPI service.
+- `races/sync.py`: Django ORM sync helpers using `update_or_create`.
+- `races/management/commands/scrape_races.py`: manual/scheduled ingestion command.
+- `bot/run_bot.py`: production worker for result polling and optional Telegram commands.
+- `notifications/telegram_utils.py`: plain `requests` sender for Telegram Bot API.
+
+The old FastAPI API, SQLite bot database, and APScheduler polling path are no
+longer required. Race subscriptions are stored in PostgreSQL/SQLite through the
+Django `RaceSubscription` model.
+
+## Environment Variables
+
+Core app variables:
+
+- `DEBUG`
+- `SECRET_KEY`
+- `ALLOWED_HOSTS`
+- `DATABASE_URL`
+- `CSRF_TRUSTED_ORIGINS`
+- `ADMIN_PASSWORD`
+
+Race/Telegram variables:
+
+- `TELEGRAM_BOT_TOKEN`: Telegram bot token used by the worker.
+- `RACE_CLUB_NAME`: club name used for program filtering and result notifications. Defaults to `PALERMO SC`.
+- `RACE_CLUB_SHORT_NAME`: short label used in the UI. Defaults to `SCP`.
+- `FIC_BASE_URL`: scraper upstream base URL. Defaults to `https://canottaggioservice.canottaggio.net`.
+- `FIC_USER_AGENT`: scraper user agent. Defaults to `Mozilla/5.0`.
+- `FIC_TIMEOUT_S`: upstream request timeout in seconds. Defaults to `15`.
+- `FIC_CALENDAR_REQUEST_DELAY_S`: delay between calendar manifestation requests. Defaults to `0.5`.
 
 ## Admin Tasks
 
@@ -106,6 +177,11 @@ Use **Slot** in the app nav. You can create a single concrete slot or use the ba
 ### Manage workouts, boats, and users
 Use Django's built-in admin panel at `/django-admin/`.
 
+### Manage Telegram profiles
+Use Django admin to edit a user's inline `UserProfile`. Set
+`telegram_username` before the user runs `/start`, or set `telegram_chat_id`
+directly if you already know it.
+
 ---
 
 ## Deploying to Heroku
@@ -113,6 +189,7 @@ Use Django's built-in admin panel at `/django-admin/`.
 This repository includes the Heroku deployment files:
 
 - `Procfile` runs database migrations during Heroku release phase and starts Gunicorn.
+- `Procfile` also defines `worker: python bot/run_bot.py` for result polling.
 - `.python-version` pins Heroku builds to Python 3.13.
 - `.slugignore` keeps local data, notebooks, SQLite files, and collected static output out of the Heroku slug.
 
@@ -128,6 +205,7 @@ This repository includes the Heroku deployment files:
    heroku config:set ALLOWED_HOSTS=your-app.herokuapp.com
    heroku config:set CSRF_TRUSTED_ORIGINS=https://your-app.herokuapp.com
    heroku config:set ADMIN_PASSWORD=replace-with-a-strong-password
+   heroku config:set TELEGRAM_BOT_TOKEN=replace-with-your-telegram-token
    ```
 
 3. Attach PostgreSQL so Heroku provides `DATABASE_URL`:
@@ -138,6 +216,11 @@ This repository includes the Heroku deployment files:
 4. After the first deploy, seed boats, bookable slots, and the admin user:
    ```bash
    heroku run python setup_initial_data.py
+   ```
+
+5. Load the race calendar:
+   ```bash
+   heroku run python manage.py scrape_races
    ```
 
 For custom domains, add them to both `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`.
@@ -153,8 +236,8 @@ After you confirm every production domain is served only over HTTPS, you can ena
 
 ## Customising Calendar Slots
 
-Bookable slots are managed in Django admin at `/django-admin/bookings/bookableslot/`.
-The calendar only shows active weekly slots. `setup_initial_data.py` seeds this schedule:
+Slots are managed in Django admin at `/django-admin/bookings/slot/`.
+The calendar only shows active concrete slots. `setup_initial_data.py` seeds this schedule:
 
 - Monday: 15:30
 - Tuesday: 07:00, 14:00, 15:30
@@ -168,7 +251,8 @@ Seeded slots are 30 minutes long by default; edit their end time in Django admin
 
 ## Boat Categories and Seats
 
-Boats have a category such as `1xC`, `2xC`, `2x`, `4x`, or `4+`, plus a seat count. Multiple athletes can book the same boat at overlapping times until all seats are full.
+Boats have a name, rower seat count, optional cox requirement, color, and active flag.
+A booking reserves the whole boat for one slot and must include the complete crew.
 
 ## Adding More Boats
 

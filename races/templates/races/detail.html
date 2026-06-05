@@ -1,0 +1,152 @@
+{% extends "bookings/base.html" %}
+{% load static %}
+
+{% block title %}{{ race.name|default:race.external_id }} - VogApp{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'races/css/races.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="back-link-wrap">
+  <a class="back-link" href="{% url 'race_calendar' %}">&lt; Torna alle regate</a>
+</div>
+
+<div class="page-head">
+  <div>
+    <h1>{{ race.name|default:race.external_id }}</h1>
+    <p class="page-description">
+      {{ race.external_id }}
+      {% if race.location %} - {{ race.location }}{% endif %}
+      {% if race.date %} - {{ race.date|date:"d/m/Y" }}{% endif %}
+    </p>
+  </div>
+  {% if is_subscribed %}
+  <form class="inline-form" method="post" action="{% url 'race_unsubscribe' race.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'race_detail' race.external_id %}" />
+    <button class="btn btn-danger" type="submit">Disiscriviti</button>
+  </form>
+  {% else %}
+  <form class="inline-form" method="post" action="{% url 'race_subscribe' race.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'race_detail' race.external_id %}" />
+    <button class="btn btn-primary" type="submit">Iscriviti</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="section-title-primary">Programma</h2>
+  <div class="program-tabs">
+    <a
+      href="{% url 'race_detail' race.external_id %}"
+      class="program-tab {% if active_program_view == 'scp' %}active{% endif %}"
+    >
+      Programma {{ race_club_short_name }}
+      <span>{{ scp_program_count }}</span>
+    </a>
+    <a
+      href="{% url 'race_detail' race.external_id %}?program=full"
+      class="program-tab {% if active_program_view == 'full' %}active{% endif %}"
+    >
+      Programma Completo
+      <span>{{ full_program_count }}</span>
+    </a>
+  </div>
+  {% if active_program_view == 'scp' %}
+  <p class="program-note">
+    Mostra solo le gare con almeno un equipaggio {{ race_club_name }}. Le righe del club sono evidenziate.
+  </p>
+  {% endif %}
+  {% if program_races %}
+  <div class="stack">
+    {% for program_race in program_races %}
+    <section>
+      <h3>GARA {{ program_race.race_number }} - {{ program_race.event }}</h3>
+      <p class="muted small-text">
+        Ore {{ program_race.time|default:"-" }}
+        {% if program_race.phase %} - {{ program_race.phase }}{% endif %}
+        {% if program_race.distance_m %} - {{ program_race.distance_m }} m{% endif %}
+      </p>
+      {% if program_race.entries %}
+      <div class="race-table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Corsia</th>
+            <th>Club</th>
+            <th class="crew-cell">Atleti</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in program_race.entries %}
+          <tr class="{% if entry.is_target_club %}program-row-target{% endif %}">
+            <td>{{ entry.lane|default:"-" }}</td>
+            <td>
+              {{ entry.club|default:"Da assegnare" }}
+              {% if entry.is_target_club %}
+              <span class="badge program-club-badge">{{ race_club_short_name }}</span>
+              {% endif %}
+            </td>
+            <td class="crew-cell">{{ entry.athletes|join:", "|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p class="empty-state">Nessun equipaggio pubblicato per questa gara.</p>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  {% if active_program_view == 'scp' and full_program_count %}
+  <p class="empty-state">Nessuna gara con equipaggi {{ race_club_name }} nel programma salvato.</p>
+  {% else %}
+  <p class="empty-state">Programma non ancora disponibile nel database.</p>
+  {% endif %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="section-title-primary">Risultati</h2>
+  {% if results %}
+  <div class="race-table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Gara</th>
+        <th>Evento</th>
+        <th>Pos.</th>
+        <th>Club</th>
+        <th class="crew-cell">Atleti</th>
+        <th>Tempo</th>
+        <th>Stato</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in results %}
+      <tr>
+        <td>{{ result.race_number|default:"-" }}</td>
+        <td>
+          {{ result.event|default:"-" }}
+          {% if result.phase %}
+          <div class="small-text muted">{{ result.phase }}</div>
+          {% endif %}
+        </td>
+        <td>{{ result.position|default:"-" }}</td>
+        <td>{{ result.club|default:"-" }}</td>
+        <td class="crew-cell">{{ result.athletes|join:", "|default:"-" }}</td>
+        <td>{{ result.finish_time|default:"-" }}</td>
+        <td>{{ result.status|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty-state">Risultati non ancora disponibili nel database.</p>
+  {% endif %}
+</div>
+{% endblock %}

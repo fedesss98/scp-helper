@@ -15,6 +15,7 @@
   <div class="nav-menu">
     <div class="nav-links">
       <a href="{% url 'calendar' %}" class="{% if request.path == '/' or request.path == '/calendar/' %}active{% endif %}">Calendario</a>
+      <a href="{% url 'race_calendar' %}" class="{% if '/races/' in request.path %}active{% endif %}">Regate</a>
       {% if not is_admin %}
       <a href="{% url 'my_bookings' %}" class="{% if request.path == '/my-bookings/' %}active{% endif %}">Prenotazioni</a>
       {% endif %}

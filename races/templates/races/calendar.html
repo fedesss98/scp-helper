@@ -1,0 +1,63 @@
+{% extends "bookings/base.html" %}
+
+{% block title %}Regate - VogApp{% endblock %}
+
+{% block content %}
+{% include "bookings/partials/page_header.html" with heading="Regate" description="Calendario regate e notifiche risultati." %}
+
+<div class="card">
+  {% if races %}
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Regata</th>
+        <th>Luogo</th>
+        <th>Categoria</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for race in races %}
+      <tr>
+        <td>
+          {% if race.date %}
+          {{ race.date|date:"d/m/Y" }}
+          {% else %}
+          <span class="muted">Da definire</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'race_detail' race.external_id %}"><strong>{{ race.name|default:race.external_id }}</strong></a>
+          <div class="small-text muted">{{ race.external_id }}</div>
+        </td>
+        <td>{{ race.location|default:"-" }}</td>
+        <td>{{ race.category|default:"-" }}</td>
+        <td>
+          <div class="actions-row">
+            <a class="btn btn-ghost btn-sm" href="{% url 'race_detail' race.external_id %}">Dettagli</a>
+            {% if race.is_subscribed %}
+            <form class="inline-form" method="post" action="{% url 'race_unsubscribe' race.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'race_calendar' %}" />
+              <button class="btn btn-danger btn-sm" type="submit">Disiscriviti</button>
+            </form>
+            {% else %}
+            <form class="inline-form" method="post" action="{% url 'race_subscribe' race.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'race_calendar' %}" />
+              <button class="btn btn-primary btn-sm" type="submit">Iscriviti</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">Nessuna regata futura disponibile. Esegui <code>python manage.py scrape_races</code> per aggiornare il calendario.</p>
+  {% endif %}
+</div>
+{% endblock %}
+

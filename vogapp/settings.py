@@ -49,7 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts',
     'bookings.apps.BookingsConfig',
+    'races',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -98,6 +101,10 @@ LOGIN_LOCKOUT_SECONDS = int(os.environ.get('LOGIN_LOCKOUT_SECONDS', '300'))
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'bookings@example.com')
 BOOKING_NOTIFICATION_EXTRA_RECIPIENTS = env_list('BOOKING_NOTIFICATION_EXTRA_RECIPIENTS')
 WELCOME_EMAIL_ENABLED = env_bool('WELCOME_EMAIL_ENABLED', True)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+SCRAPER_POLL_INTERVAL = 180
+RACE_CLUB_NAME = os.environ.get('RACE_CLUB_NAME', 'PALERMO SC')
+RACE_CLUB_SHORT_NAME = os.environ.get('RACE_CLUB_SHORT_NAME', 'SCP')
 
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
